@@ -4,20 +4,21 @@ use std::collections::{Deque, HashMap, HashSet, RingBuf};
 use std::io::File;
 
 macro_rules! edges (
-    ($($u:expr => $v:expr),+) => ({
+    ($($u:expr => $v:expr => $e:expr),+) => ({
         let mut edges: Vec<(uint, uint, Edge)> = Vec::new();
         $(
-            edges.push(($u, $v, Edge));
+            edges.push(($u, $v, $e));
         )+
         edges
     });
-    ($($u:expr => $v:expr),+,) => (edges!($($u => $v),+))
+    ($($u:expr => $v:expr => $e:expr),+,) => (edges!($($u => $v => $e),+));
 )
 
 fn main() {
     let mut g: AdjListGraph<Node, Edge> = AdjListGraph::new();
-    g.add_vertices(&[0, 1, 2, 3, 4], Node);
-    let e = edges!(0 => 3, 3 => 2, 3 => 1, 1 => 4, 4 => 2);
+    g.add_vertices(vec![(0, Node), (1, Node), (2, Node), (3, Node), (4, Node)]);
+    let e = edges!(0 => 3 => Edge, 3 => 2 => Edge, 3 => 1 => Edge,
+                   1 => 4 => Edge, 4 => 2 => Edge);
     g.add_edges(e);
     let mut dist: HashMap<uint, uint> = HashMap::new();
     g.dfs(|node: uint, parent: Option<uint>| {
@@ -71,29 +72,29 @@ struct Edge;
 // }
 
 struct AdjListGraph<V, E> {
-    adjList: HashMap<uint, HashMap<uint, (V, E)>>,
+    adjList: HashMap<uint, HashMap<uint, E>>,
     nodes: HashMap<uint, V>,
 }
 
-impl<V: Clone, E> AdjListGraph<V, E> {
+impl<V, E> AdjListGraph<V, E> {
     fn new() -> AdjListGraph<V, E> {
         AdjListGraph { adjList: HashMap::new(), nodes: HashMap::new() }
     }
 
-    fn add_vertex(&mut self, n: uint, v: &V) {
-        self.nodes.insert(n, v.clone());
+    fn add_vertex(&mut self, n: uint, v: V) {
+        self.nodes.insert(n, v);
         self.adjList.insert(n, HashMap::new());
     }
 
-    fn add_vertices(&mut self, vertices: &[uint], v: V) {
-        for i in vertices.iter() {
-            self.add_vertex(*i, &v);
+    fn add_vertices(&mut self, vertices: Vec<(uint, V)>) {
+        for (i, v) in vertices.move_iter() {
+            self.add_vertex(i, v);
         }
     }
 
     fn add_edge(&mut self, from: uint, to: uint, e: E) {
         let adj = self.adjList.get_mut(&from);
-        adj.insert(to, (self.nodes[to].clone(), e));
+        adj.insert(to, e);
     }
 
     fn add_edges(&mut self, edges: Vec<(uint, uint, E)>) {
@@ -111,7 +112,7 @@ impl<V: Clone, E> AdjListGraph<V, E> {
         file.write_str("digraph G {\n").ok();
 
         for (from, u) in self.nodes.iter() {
-            for (to, &(ref v, _)) in self.adjList[*from].iter() {
+            for (to, _) in self.adjList[*from].iter() {
                 file.write_str(
                     format!("\t{} -> {};\n", from, to).as_slice()).ok();
             }
