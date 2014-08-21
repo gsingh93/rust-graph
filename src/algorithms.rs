@@ -157,7 +157,8 @@ pub fn warshall() {
 
 }
 
-pub fn scc<V: Clone + Default, E: Clone + Default + Ord>(g: &AdjListGraph<V, E>) {
+pub fn connected_components<V: Clone + Default,
+                            E: Clone + Default + Ord>(g: &AdjListGraph<V, E>) {
     let mut ds = DisjointSet::new();
     for v in g.nodes_iter() {
         ds.add_set(v.clone());
