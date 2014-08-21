@@ -55,8 +55,9 @@ fn main() {
     g.add_edges_with_prop(e);
 
     // Prim's Algorithm
-    // let mst = prim(&g);
-    // output_graphviz(&mst, "prim-mst.dot");
+    let mst = prim(&g);
+    output_graphviz(&mst, "prim-mst.dot");
+
     let mst = kruskal(&g);
     output_graphviz(&mst, "kruskal-mst.dot");
 }

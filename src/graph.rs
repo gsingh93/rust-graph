@@ -39,6 +39,10 @@ impl<V: Clone + Default, E: Clone + Default + Ord> AdjListGraph<V, E> {
                        edges: HashMap::new() }
     }
 
+    pub fn size(&self) -> uint {
+        self.nodes.len()
+    }
+
     pub fn add_vertex(&mut self, n: uint) {
         self.add_vertex_with_prop(n, Default::default());
     }
@@ -86,6 +90,10 @@ impl<V: Clone + Default, E: Clone + Default + Ord> AdjListGraph<V, E> {
         for (from, to, e) in edges.move_iter() {
             self.add_edge_with_prop(from, to, e);
         }
+    }
+
+    pub fn node_prop(&self, node: uint) -> V {
+        self.nodes[node].clone()
     }
 
     pub fn edge_prop(&self, from: uint, to: uint) -> E {

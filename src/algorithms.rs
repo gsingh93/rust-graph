@@ -96,32 +96,30 @@ pub fn prim<V: Clone + Default,
         PriorityQueue::new();
     let mut visited: HashSet<uint> = HashSet::new();
 
-    // pq.push(PQElt(0, None, None));
-    // mst.add_vertex(0, g.nodes[0].clone());
+    pq.push(PQElt(0, None, None));
+    mst.add_vertex_with_prop(0, g.node_prop(0));
 
-    // while mst.nodes.len() != g.nodes.len() {
-    //     // Pick edge with minimal weight and add to graph
-    //     let PQElt(u, parent, min_edge) = pq.pop().unwrap();
+    while mst.size() != g.size() {
+        // Pick edge with minimal weight and add to graph
+        let PQElt(u, parent, min_edge) = pq.pop().unwrap();
 
-    //     match (parent, min_edge) {
-    //         (None, None) => (),
-    //         (Some(parent), Some(min_edge)) => {
-    //             assert!(mst.nodes.contains_key(&u) == false);
-    //             assert!(mst.nodes.contains_key(&parent) == true);
-    //             mst.add_vertex(u, g.nodes[u].clone());
-    //             mst.add_edge(parent, u, min_edge);
-    //         },
-    //         (_, _) => fail!("Error")
-    //     }
+        match (parent, min_edge) {
+            (None, None) => (),
+            (Some(parent), Some(min_edge)) => {
+                mst.add_vertex_with_prop(u, g.node_prop(u));
+                mst.add_edge_with_prop(parent, u, min_edge);
+            },
+            (_, _) => fail!("Error")
+        }
 
-    //     // Push all adjacent edges on to priority queue
-    //     visited.insert(u);
-    //     for v in g.adj_iter(u) {
-    //         if !visited.contains(v) {
-    //             pq.push(PQElt(*v, Some(u), Some((*edge).clone())));
-    //         }
-    //     }
-    // }
+        // Push all adjacent edges on to priority queue
+        visited.insert(u);
+        for v in g.adj_iter(u) {
+            if !visited.contains(v) {
+                pq.push(PQElt(*v, Some(u), Some(g.edge_prop(u, *v))));
+            }
+        }
+    }
 
     mst
 }
@@ -142,10 +140,10 @@ pub fn kruskal<V: Clone + Default,
 
     let mut mst: AdjListGraph<V, E> = AdjListGraph::new();
     while !edge_weights.is_empty() {
-        let (u, v, _) = edge_weights.pop().unwrap();
+        let (u, v, weight) = edge_weights.pop().unwrap();
         ds.find(&u);
         if ds.find(&u) != ds.find(&v) {
-            mst.add_edge(u, v);
+            mst.add_edge_with_prop(u, v, weight);
             ds.union(&u, &v);
         }
     }
