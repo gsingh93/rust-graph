@@ -126,7 +126,9 @@ pub fn prim<V: Clone + Default,
     mst
 }
 
-pub fn kruskal<V: Clone + Default, E: Clone + Default + Ord + Weight>(g: &AdjListGraph<V, E>) {
+pub fn kruskal<V: Clone + Default,
+               E: Clone + Default + Ord + Weight>(g: &AdjListGraph<V, E>)
+                                                  -> AdjListGraph<V, E>{
     let mut ds = DisjointSet::new();
     for v in g.nodes_iter() {
         ds.add_set(*v);
@@ -134,19 +136,21 @@ pub fn kruskal<V: Clone + Default, E: Clone + Default + Ord + Weight>(g: &AdjLis
 
     let mut pq: PriorityQueue<PQElt<E>> = PriorityQueue::new();
     for &(u, v) in g.edges_iter() {
-        pq.push(PQElt(u, Some(v), None)); // TODO: Some((*edge).clone())));
+        pq.push(PQElt(u, Some(v), Some(g.edge_prop((u, v)))));
     }
 
+    let mut mst: AdjListGraph<V, E> = AdjListGraph::new();
     while !pq.is_empty() {
         let PQElt(u, v, _) = pq.pop().unwrap();
         let v = v.unwrap();
+        ds.find(&u);
         if ds.find(&u) != ds.find(&v) {
+            mst.add_edge(u, v);
             ds.union(&u, &v);
         }
     }
 
-    // TODO: Return graph made up of ds
-    println!("{}", ds);
+    mst
 }
 
 pub fn djikstra() {

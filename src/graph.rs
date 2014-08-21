@@ -65,6 +65,13 @@ impl<V: Clone + Default, E: Clone + Default + Ord> AdjListGraph<V, E> {
     }
 
     pub fn add_edge_with_prop(&mut self, from: uint, to: uint, e: E) {
+        if !self.nodes.contains_key(&from) {
+            self.add_vertex(from);
+        }
+        if !self.nodes.contains_key(&to) {
+            self.add_vertex(to);
+        }
+
         self.adjList.get_mut(&from).push(to);
         self.edges.insert((from, to), e);
     }
@@ -81,6 +88,10 @@ impl<V: Clone + Default, E: Clone + Default + Ord> AdjListGraph<V, E> {
         }
     }
 
+    pub fn edge_prop(&self, e: (uint, uint)) -> E {
+        self.edges[e].clone()
+    }
+
     pub fn nodes_iter<'a>(&'a self) -> Keys<'a, uint, V> {
         self.nodes.keys()
     }
@@ -94,7 +105,9 @@ impl<V: Clone + Default, E: Clone + Default + Ord> AdjListGraph<V, E> {
     }
 }
 
-pub fn output_graphviz<V: Clone + Default, E: Clone + Default + Ord + Show>(g: &AdjListGraph<V, E>, filename: &str) {
+pub fn output_graphviz<V: Clone + Default,
+                       E: Clone + Default + Ord + Show>(g: &AdjListGraph<V, E>,
+                                                        filename: &str) {
     let path = Path::new(filename);
     let mut file = match File::create(&path) {
         Ok(f)  => f,

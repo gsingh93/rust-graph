@@ -2,8 +2,9 @@
 
 #[phase(plugin, link)] extern crate graph;
 
-use graph::algorithms::Weight;
+use graph::algorithms::kruskal;
 use graph::algorithms::prim;
+use graph::algorithms::Weight;
 use graph::graph::AdjListGraph;
 use graph::graph::output_graphviz;
 use std::cmp::{Ord, Ordering};
@@ -48,13 +49,14 @@ impl Ord for Edge {
 fn main() {
     // Construct graph
     let mut g: AdjListGraph<(), Edge> = AdjListGraph::new();
-    g.add_vertices(vec![0, 1, 2, 3, 4]);
     let e = edges!(0 => 3 => Edge::new(4), 3 => 2 => Edge::new(2),
                    3 => 1 => Edge::new(-1), 1 => 4 => Edge::new(1),
                    4 => 2 => Edge::new(5));
     g.add_edges_with_prop(e);
 
     // Prim's Algorithm
-    let mst = prim(&g);
-    output_graphviz(&mst, "prim-mst.dot");
+    // let mst = prim(&g);
+    // output_graphviz(&mst, "prim-mst.dot");
+    let mst = kruskal(&g);
+    output_graphviz(&mst, "kruskal-mst.dot");
 }
