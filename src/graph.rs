@@ -88,8 +88,8 @@ impl<V: Clone + Default, E: Clone + Default + Ord> AdjListGraph<V, E> {
         }
     }
 
-    pub fn edge_prop(&self, e: (uint, uint)) -> E {
-        self.edges[e].clone()
+    pub fn edge_prop(&self, from: uint, to: uint) -> E {
+        self.edges[(from, to)].clone()
     }
 
     pub fn nodes_iter<'a>(&'a self) -> Keys<'a, uint, V> {

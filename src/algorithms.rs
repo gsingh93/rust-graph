@@ -134,15 +134,15 @@ pub fn kruskal<V: Clone + Default,
         ds.add_set(*v);
     }
 
-    let mut pq: PriorityQueue<PQElt<E>> = PriorityQueue::new();
+    let mut edge_weights = Vec::new();
     for &(u, v) in g.edges_iter() {
-        pq.push(PQElt(u, Some(v), Some(g.edge_prop((u, v)))));
+        edge_weights.push((u, v, g.edge_prop(u, v)))
     }
+    edge_weights.sort();
 
     let mut mst: AdjListGraph<V, E> = AdjListGraph::new();
-    while !pq.is_empty() {
-        let PQElt(u, v, _) = pq.pop().unwrap();
-        let v = v.unwrap();
+    while !edge_weights.is_empty() {
+        let (u, v, _) = edge_weights.pop().unwrap();
         ds.find(&u);
         if ds.find(&u) != ds.find(&v) {
             mst.add_edge(u, v);
