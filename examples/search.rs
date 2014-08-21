@@ -1,38 +1,23 @@
-#![feature(macro_rules)]
+#![feature(macro_rules, default_type_params, phase)]
 
-extern crate graph;
+#[phase(plugin, link)] extern crate graph;
 
 use std::collections::HashMap;
-use graph::AdjListGraph;
-
-#[deriving(Clone)]
-struct Node;
-
-#[deriving(Clone)]
-struct Edge;
-
-macro_rules! edges (
-    ($($u:expr => $v:expr => $e:expr),+) => ({
-        let mut edges: Vec<(uint, uint, Edge)> = Vec::new();
-        $(
-            edges.push(($u, $v, $e));
-        )+
-        edges
-    });
-    ($($u:expr => $v:expr => $e:expr),+,) => (edges!($($u => $v => $e),+));
-)
+use graph::algorithms::dfs;
+use graph::algorithms::bfs;
+use graph::graph::AdjListGraph;
+use graph::graph::output_graphviz;
 
 fn main() {
     // Construct graph
-    let mut g: AdjListGraph<Node, Edge> = AdjListGraph::new();
-    g.add_vertices(vec![(0, Node), (1, Node), (2, Node), (3, Node), (4, Node)]);
-    let e = edges!(0 => 3 => Edge, 3 => 2 => Edge, 3 => 1 => Edge,
-                   1 => 4 => Edge, 4 => 2 => Edge);
+    let mut g: AdjListGraph = AdjListGraph::new();
+    g.add_vertices(vec![0, 1, 2, 3, 4]);
+    let e = edges!(0 => 3, 3 => 2, 3 => 1, 1 => 4, 4 => 2);
     g.add_edges(e);
 
     // Calculate distances with DFS
     let mut dist: HashMap<uint, uint> = HashMap::new();
-    g.dfs(|node: uint, parent: Option<uint>| {
+    dfs(&g, |node: uint, parent: Option<uint>| {
         match parent {
             None => { dist.insert(node, 0); },
             Some(p) => {
@@ -48,7 +33,7 @@ fn main() {
 
     // Calculate distances with BFS
     let mut dist: HashMap<uint, uint> = HashMap::new();
-    g.bfs(|node: uint, parent: Option<uint>| {
+    bfs(&g, |node: uint, parent: Option<uint>| {
         match parent {
             None => { dist.insert(node, 0); },
             Some(p) => {
@@ -63,5 +48,5 @@ fn main() {
     }
 
     // Output GraphViz Dot file
-    g.output_graphviz("graph.dot");
+    output_graphviz(&g, "graph.dot");
 }
