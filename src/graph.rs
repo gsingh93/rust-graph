@@ -48,8 +48,10 @@ impl<V: Clone + Default, E: Clone + Default + Ord> AdjListGraph<V, E> {
     }
 
     pub fn add_node_with_prop(&mut self, n: uint, v: V) {
-        self.nodes.insert(n, v);
-        self.adjList.insert(n, Vec::new());
+        // Only construct a new adjacency list if the node did not already exist
+        if !self.nodes.insert(n, v) {
+            self.adjList.insert(n, Vec::new());
+        }
     }
 
     pub fn add_nodes(&mut self, vertices: Vec<uint>) {
@@ -62,6 +64,17 @@ impl<V: Clone + Default, E: Clone + Default + Ord> AdjListGraph<V, E> {
         for (i, v) in vertices.move_iter() {
             self.add_node_with_prop(i, v);
         }
+    }
+
+    pub fn copy_node_to(&self, other: &mut AdjListGraph<V, E>, v: uint) {
+        other.add_node_with_prop(v, self.node_prop(v));
+    }
+
+    pub fn copy_edge_to(&self, other: &mut AdjListGraph<V, E>, from: uint,
+                     to: uint) {
+        self.copy_node_to(other, from);
+        self.copy_node_to(other, to);
+        other.add_edge_with_prop(from, to, self.edge_prop(from, to));
     }
 
     pub fn add_edge(&mut self, from: uint, to: uint) {

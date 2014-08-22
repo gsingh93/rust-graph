@@ -116,7 +116,7 @@ pub fn prim<V: Clone + Default,
     };
 
     pq.push(PQElt(source, None, None));
-    mst.add_node_with_prop(source, g.node_prop(source));
+    g.copy_node_to(&mut mst, source);
 
     while mst.size() != g.size() {
         // Pick edge with minimal weight and add to graph
@@ -124,9 +124,8 @@ pub fn prim<V: Clone + Default,
 
         match (parent, min_edge) {
             (None, None) => (),
-            (Some(parent), Some(min_edge)) => {
-                mst.add_node_with_prop(u, g.node_prop(u));
-                mst.add_edge_with_prop(parent, u, min_edge);
+            (Some(parent), Some(_)) => {
+                g.copy_edge_to(&mut mst, parent, u);
             },
             (_, _) => fail!("Error")
         }
@@ -159,10 +158,10 @@ pub fn kruskal<V: Clone + Default,
 
     let mut mst: AdjListGraph<V, E> = AdjListGraph::new();
     while !edge_weights.is_empty() {
-        let (u, v, weight) = edge_weights.pop().unwrap();
+        let (u, v, _) = edge_weights.pop().unwrap();
         ds.find(&u);
         if ds.find(&u) != ds.find(&v) {
-            mst.add_edge_with_prop(u, v, weight);
+            g.copy_edge_to(&mut mst, u, v);
             ds.union(&u, &v);
         }
     }
