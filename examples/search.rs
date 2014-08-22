@@ -40,7 +40,7 @@ fn main() {
                 dist.insert(node, new_dist);
             }
         }
-    });
+    }, 0);
     println!("BFS");
     for (i, d) in dist.iter() {
         println!("{}: {}", i, d);

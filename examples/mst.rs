@@ -25,6 +25,10 @@ impl Weight for Edge {
     fn weight(&self) -> int {
         self.weight
     }
+
+    fn set_weight(&mut self, weight: int) {
+        self.weight = weight;
+    }
 }
 
 impl Default for Edge {

@@ -42,6 +42,7 @@ impl<E: PartialEq> PartialEq for PQElt<E> {
 
 pub trait Weight {
     fn weight(&self) -> int;
+    fn set_weight(&mut self, int);
 }
 
 pub fn dfs<V: Clone + Default,
