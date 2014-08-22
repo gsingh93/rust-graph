@@ -43,24 +43,24 @@ impl<V: Clone + Default, E: Clone + Default + Ord> AdjListGraph<V, E> {
         self.nodes.len()
     }
 
-    pub fn add_vertex(&mut self, n: uint) {
-        self.add_vertex_with_prop(n, Default::default());
+    pub fn add_node(&mut self, n: uint) {
+        self.add_node_with_prop(n, Default::default());
     }
 
-    pub fn add_vertex_with_prop(&mut self, n: uint, v: V) {
+    pub fn add_node_with_prop(&mut self, n: uint, v: V) {
         self.nodes.insert(n, v);
         self.adjList.insert(n, Vec::new());
     }
 
-    pub fn add_vertices(&mut self, vertices: Vec<uint>) {
+    pub fn add_nodes(&mut self, vertices: Vec<uint>) {
         for i in vertices.move_iter() {
-            self.add_vertex(i);
+            self.add_node(i);
         }
     }
 
-    pub fn add_vertices_with_prop(&mut self, vertices: Vec<(uint, V)>) {
+    pub fn add_nodes_with_prop(&mut self, vertices: Vec<(uint, V)>) {
         for (i, v) in vertices.move_iter() {
-            self.add_vertex_with_prop(i, v);
+            self.add_node_with_prop(i, v);
         }
     }
 
@@ -70,10 +70,10 @@ impl<V: Clone + Default, E: Clone + Default + Ord> AdjListGraph<V, E> {
 
     pub fn add_edge_with_prop(&mut self, from: uint, to: uint, e: E) {
         if !self.nodes.contains_key(&from) {
-            self.add_vertex(from);
+            self.add_node(from);
         }
         if !self.nodes.contains_key(&to) {
-            self.add_vertex(to);
+            self.add_node(to);
         }
 
         self.adjList.get_mut(&from).push(to);

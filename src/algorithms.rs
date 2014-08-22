@@ -97,7 +97,7 @@ pub fn prim<V: Clone + Default,
     let mut visited: HashSet<uint> = HashSet::new();
 
     pq.push(PQElt(0, None, None));
-    mst.add_vertex_with_prop(0, g.node_prop(0));
+    mst.add_node_with_prop(0, g.node_prop(0));
 
     while mst.size() != g.size() {
         // Pick edge with minimal weight and add to graph
@@ -106,7 +106,7 @@ pub fn prim<V: Clone + Default,
         match (parent, min_edge) {
             (None, None) => (),
             (Some(parent), Some(min_edge)) => {
-                mst.add_vertex_with_prop(u, g.node_prop(u));
+                mst.add_node_with_prop(u, g.node_prop(u));
                 mst.add_edge_with_prop(parent, u, min_edge);
             },
             (_, _) => fail!("Error")
