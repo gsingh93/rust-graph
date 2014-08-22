@@ -46,10 +46,21 @@ pub trait Weight {
 
 pub fn dfs<V: Clone + Default,
            E: Clone + Default + Ord>(g: &AdjListGraph<V, E>,
-                                  visit: |uint, Option<uint>|) {
+                                     visit: |uint, Option<uint>|) {
+    match g.nodes_iter().nth(1) {
+        Some(source) => dfs_from(g, visit, *source),
+        None         => ()
+    }
+}
+
+pub fn dfs_from<V: Clone + Default,
+                E: Clone + Default + Ord>(g: &AdjListGraph<V, E>,
+                                          visit: |uint, Option<uint>|,
+                                          source: uint) {
     let mut visited: HashSet<uint> = HashSet::new();
-    visited.insert(0);
-    dfs_helper(g, 0, None, &mut visited, visit);
+
+    visited.insert(source);
+    dfs_helper(g, source, None, &mut visited, visit);
 
     fn dfs_helper<V: Clone + Default,
     E: Clone + Default + Ord>(g: &AdjListGraph<V, E>,
@@ -70,11 +81,12 @@ pub fn dfs<V: Clone + Default,
 
 pub fn bfs<V: Clone + Default,
            E: Clone + Default + Ord>(g: &AdjListGraph<V, E>,
-                                  visit: |uint, Option<uint>|) {
+                                     visit: |uint, Option<uint>|,
+                                     source: uint) {
     let mut visited: HashSet<uint> = HashSet::new();
     let mut queue: RingBuf<(uint, Option<uint>)> = RingBuf::new();
-    visited.insert(0);
-    queue.push((0, None));
+    visited.insert(source);
+    queue.push((source, None));
 
     while !queue.is_empty() {
         let (u, parent) = queue.pop_front().unwrap();
@@ -90,14 +102,20 @@ pub fn bfs<V: Clone + Default,
 
 pub fn prim<V: Clone + Default,
             E: Clone + Default + Ord + Weight>(g: &AdjListGraph<V, E>)
-                                     -> AdjListGraph<V, E> {
+                                               -> AdjListGraph<V, E> {
     let mut mst = AdjListGraph::new();
     let mut pq: PriorityQueue<PQElt<E>> =
         PriorityQueue::new();
     let mut visited: HashSet<uint> = HashSet::new();
 
-    pq.push(PQElt(0, None, None));
-    mst.add_node_with_prop(0, g.node_prop(0));
+    // TODO: Should the user be allowed to choose the source node
+    let source = match g.nodes_iter().nth(1) {
+        Some(source) => *source,
+        None         => return mst
+    };
+
+    pq.push(PQElt(source, None, None));
+    mst.add_node_with_prop(source, g.node_prop(source));
 
     while mst.size() != g.size() {
         // Pick edge with minimal weight and add to graph
