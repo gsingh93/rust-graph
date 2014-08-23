@@ -49,7 +49,7 @@ impl<V: Clone + Default, E: Clone + Default + Ord> AdjListGraph<V, E> {
 
     pub fn add_node_with_prop(&mut self, n: uint, v: V) {
         // Only construct a new adjacency list if the node did not already exist
-        if !self.nodes.insert(n, v) {
+        if self.nodes.insert(n, v) {
             self.adjList.insert(n, Vec::new());
         }
     }
@@ -145,3 +145,92 @@ pub fn output_graphviz<V: Clone + Default,
 
     file.write_str("}\n").ok();
 }
+
+macro_rules! add_node (
+    ($m:ident, $g:ident, $n:expr, $p:expr) => ({
+        $m.insert($n, $p);
+        $g.add_node_with_prop($n, $p);
+    });
+    ($m:ident, $g:ident, $n:expr) => ({
+        $m.insert($n, 0);
+        $g.add_node($n);
+    })
+)
+
+macro_rules! add_edge (
+    ($em:ident, $nm: ident, $g:ident, $f:expr, $t:expr, $p:expr) => ({
+        $em.insert(($f, $t), $p);
+        $g.add_edge_with_prop($f, $t, $p);
+    });
+    ($em:ident, $nm:ident, $g:ident, $f:expr, $t:expr) => ({
+        if !$nm.contains_key(&$f) {
+            $nm.insert($f, 0);
+        }
+        if !$nm.contains_key(&$t) {
+            $nm.insert($t, 0);
+        }
+        $em.insert(($f, $t), 0);
+        $g.add_edge($f, $t);
+    })
+)
+
+#[cfg(test)]
+fn check<V: Clone + Default + Ord + Show,
+         E: Clone + Default + Ord + Show>(g: &AdjListGraph<V, E>,
+                                          nodes: HashMap<uint, V>,
+                                          edges: HashMap<(uint, uint), E>) {
+    assert_eq!(nodes.len(), g.size());
+
+    assert_eq!(nodes.len(), g.nodes_iter().count());
+    for n in g.nodes_iter() {
+        assert!(nodes.contains_key(n));
+        assert_eq!(nodes[*n], g.node_prop(*n));
+    }
+
+    assert_eq!(edges.len(), g.edges_iter().count());
+    for e in g.edges_iter() {
+        let (u, v) = *e;
+        assert!(edges.contains_key(e));
+        assert_eq!(edges[*e], g.edge_prop(u, v));
+    }
+    // TODO: Adjacency
+}
+
+#[test]
+fn graph_creation_test() {
+    let mut nodes = HashMap::new();
+    let mut edges = HashMap::new();
+    let mut g = AdjListGraph::new();
+    add_node!(nodes, g, 0, 1u);
+    check(&g, nodes.clone(), edges.clone());
+    add_node!(nodes, g, 2, 2);
+    check(&g, nodes.clone(), edges.clone());
+    add_node!(nodes, g, 3);
+    check(&g, nodes.clone(), edges.clone());
+    add_edge!(edges, nodes, g, 0, 2, 6u);
+    check(&g, nodes.clone(), edges.clone());
+    add_edge!(edges, nodes, g, 2, 0);
+    check(&g, nodes.clone(), edges.clone());
+    add_edge!(edges, nodes, g, 3, 0, 7);
+    check(&g, nodes.clone(), edges.clone());
+    add_edge!(edges, nodes, g, 0, 3);
+    check(&g, nodes.clone(), edges.clone());
+    add_edge!(edges, nodes, g, 1, 2);
+    check(&g, nodes.clone(), edges.clone());
+
+    // Test duplicate additions
+    add_edge!(edges, nodes, g, 3, 0, 7);
+    check(&g, nodes.clone(), edges.clone());
+
+    *edges.get_mut(&(3, 0)) = 6;
+    add_edge!(edges, nodes, g, 3, 0, 6);
+    check(&g, nodes.clone(), edges.clone());
+
+    add_edge!(edges, nodes, g, 0, 1);
+    check(&g, nodes.clone(), edges.clone());
+
+    *nodes.get_mut(&0) = 2;
+    add_node!(nodes, g, 0, 2);
+    check(&g, nodes.clone(), edges.clone());
+}
+
