@@ -28,14 +28,14 @@ macro_rules! edges (
 )
 
 pub struct AdjListGraph<V = (), E = ()> {
-    adjList: HashMap<uint, Vec<uint>>,
+    adj_list: HashMap<uint, Vec<uint>>,
     nodes: HashMap<uint, V>,
     edges: HashMap<(uint, uint), E>,
 }
 
 impl<V: Clone + Default, E: Clone + Default + Ord> AdjListGraph<V, E> {
     pub fn new() -> AdjListGraph<V, E> {
-        AdjListGraph { adjList: HashMap::new(), nodes: HashMap::new(),
+        AdjListGraph { adj_list: HashMap::new(), nodes: HashMap::new(),
                        edges: HashMap::new() }
     }
 
@@ -50,7 +50,7 @@ impl<V: Clone + Default, E: Clone + Default + Ord> AdjListGraph<V, E> {
     pub fn add_node_with_prop(&mut self, n: uint, v: V) {
         // Only construct a new adjacency list if the node did not already exist
         if self.nodes.insert(n, v) {
-            self.adjList.insert(n, Vec::new());
+            self.adj_list.insert(n, Vec::new());
         }
     }
 
@@ -89,7 +89,7 @@ impl<V: Clone + Default, E: Clone + Default + Ord> AdjListGraph<V, E> {
             self.add_node(to);
         }
 
-        self.adjList.get_mut(&from).push(to);
+        self.adj_list.get_mut(&from).push(to);
         self.edges.insert((from, to), e);
     }
 
@@ -122,7 +122,7 @@ impl<V: Clone + Default, E: Clone + Default + Ord> AdjListGraph<V, E> {
     }
 
     pub fn adj_iter<'a>(&'a self, from: uint) -> Items<'a, uint> {
-        self.adjList[from].iter()
+        self.adj_list[from].iter()
     }
 }
 
@@ -147,28 +147,47 @@ pub fn output_graphviz<V: Clone + Default,
 }
 
 macro_rules! add_node (
-    ($m:ident, $g:ident, $n:expr, $p:expr) => ({
-        $m.insert($n, $p);
+    ($m:ident, $adj:ident, $g:ident, $n:expr, $p:expr) => ({
+        if !$m.contains_key(&$n) {
+            $adj.insert($n, Vec::new());
+        }
+        $m.insert($n as uint, $p);
         $g.add_node_with_prop($n, $p);
     });
-    ($m:ident, $g:ident, $n:expr) => ({
+    ($m:ident, $adj:ident, $g:ident, $n:expr) => ({
+        if !$m.contains_key(&$n) {
+            $adj.insert($n, Vec::new());
+        }
         $m.insert($n, 0);
         $g.add_node($n);
     })
 )
 
 macro_rules! add_edge (
-    ($em:ident, $nm: ident, $g:ident, $f:expr, $t:expr, $p:expr) => ({
-        $em.insert(($f, $t), $p);
-        $g.add_edge_with_prop($f, $t, $p);
-    });
-    ($em:ident, $nm:ident, $g:ident, $f:expr, $t:expr) => ({
+    ($em:ident, $nm: ident, $adj:ident, $g:ident, $f:expr, $t:expr,
+     $p:expr) => ({
         if !$nm.contains_key(&$f) {
+            $adj.insert($f, Vec::new());
             $nm.insert($f, 0);
         }
         if !$nm.contains_key(&$t) {
+            $adj.insert($t, Vec::new());
             $nm.insert($t, 0);
         }
+        $adj.get_mut(&$f).push($t);
+        $em.insert(($f, $t), $p);
+        $g.add_edge_with_prop($f, $t, $p);
+    });
+    ($em:ident, $nm:ident, $adj:ident, $g:ident, $f:expr, $t:expr) => ({
+        if !$nm.contains_key(&$f) {
+            $adj.insert($f, Vec::new());
+            $nm.insert($f, 0);
+        }
+        if !$nm.contains_key(&$t) {
+            $adj.insert($t, Vec::new());
+            $nm.insert($t, 0);
+        }
+        $adj.get_mut(&$f).push($t);
         $em.insert(($f, $t), 0);
         $g.add_edge($f, $t);
     })
@@ -177,8 +196,9 @@ macro_rules! add_edge (
 #[cfg(test)]
 fn check<V: Clone + Default + Ord + Show,
          E: Clone + Default + Ord + Show>(g: &AdjListGraph<V, E>,
-                                          nodes: HashMap<uint, V>,
-                                          edges: HashMap<(uint, uint), E>) {
+                                          nodes: &HashMap<uint, V>,
+                                          edges: &HashMap<(uint, uint), E>,
+                                          adj_list: &HashMap<uint, Vec<uint>>) {
     assert_eq!(nodes.len(), g.size());
 
     assert_eq!(nodes.len(), g.nodes_iter().count());
@@ -193,44 +213,68 @@ fn check<V: Clone + Default + Ord + Show,
         assert!(edges.contains_key(e));
         assert_eq!(edges[*e], g.edge_prop(u, v));
     }
-    // TODO: Adjacency
+
+    assert_eq!(g.nodes_iter().count(), adj_list.len());
+    for u in g.nodes_iter() {
+        assert_eq!(adj_list[*u], g.adj_iter(*u).map(|x| *x).collect());
+    }
 }
 
 #[test]
 fn graph_creation_test() {
     let mut nodes = HashMap::new();
     let mut edges = HashMap::new();
+    let mut adj_list: HashMap<uint, Vec<uint>> = HashMap::new();
     let mut g = AdjListGraph::new();
-    add_node!(nodes, g, 0, 1u);
-    check(&g, nodes.clone(), edges.clone());
-    add_node!(nodes, g, 2, 2);
-    check(&g, nodes.clone(), edges.clone());
-    add_node!(nodes, g, 3);
-    check(&g, nodes.clone(), edges.clone());
-    add_edge!(edges, nodes, g, 0, 2, 6u);
-    check(&g, nodes.clone(), edges.clone());
-    add_edge!(edges, nodes, g, 2, 0);
-    check(&g, nodes.clone(), edges.clone());
-    add_edge!(edges, nodes, g, 3, 0, 7);
-    check(&g, nodes.clone(), edges.clone());
-    add_edge!(edges, nodes, g, 0, 3);
-    check(&g, nodes.clone(), edges.clone());
-    add_edge!(edges, nodes, g, 1, 2);
-    check(&g, nodes.clone(), edges.clone());
 
-    // Test duplicate additions
-    add_edge!(edges, nodes, g, 3, 0, 7);
-    check(&g, nodes.clone(), edges.clone());
+    macro_rules! check_node(
+        ($n:expr, $p:expr) => ({
+            add_node!(nodes, adj_list, g, $n, $p);
+            check(&g, &nodes, &edges, &adj_list);
+        });
+        ($n:expr) => ({
+            add_node!(nodes, adj_list, g, $n);
+            check(&g, &nodes, &edges, &adj_list);
+        })
+    );
+    macro_rules! check_edge(
+        ($f:expr, $t:expr, $p:expr) => ({
+            add_edge!(edges, nodes, adj_list, g, $f, $t, $p);
+            check(&g, &nodes, &edges, &adj_list);
+        });
+        ($f:expr, $t:expr) => ({
+            add_edge!(edges, nodes, adj_list, g, $f, $t);
+            check(&g, &nodes, &edges, &adj_list);
+        })
+    );
 
+    check_node!(0, 1u);
+    check_node!(2, 2);
+    check_node!(3);
+
+    check_edge!(0, 2, 6u);
+    check_edge!(2, 0);
+    check_edge!(3, 0, 7);
+    check_edge!(0, 3);
+    check_edge!(1, 2);
+
+    // Duplicate edge
+    check_edge!(3, 0, 7);
+
+    // Change edge data
     *edges.get_mut(&(3, 0)) = 6;
-    add_edge!(edges, nodes, g, 3, 0, 6);
-    check(&g, nodes.clone(), edges.clone());
+    check_edge!(3, 0, 6);
 
-    add_edge!(edges, nodes, g, 0, 1);
-    check(&g, nodes.clone(), edges.clone());
 
+    // Duplicate node
+    check_node!(0, 1);
+
+    // Change node data
     *nodes.get_mut(&0) = 2;
-    add_node!(nodes, g, 0, 2);
-    check(&g, nodes.clone(), edges.clone());
+    check_node!(0, 2);
 }
 
+#[test]
+fn graph_copy_test() {
+    // Make sure graphs and all their properties can be copied correctly
+}
