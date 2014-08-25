@@ -39,7 +39,7 @@ pub trait Weight {
 
 pub fn dfs<V: Clone,
            E: Clone + Ord>(g: &AdjListGraph<V, E>,
-                                     visit: |uint, Option<uint>|) {
+                           visit: |uint, Option<uint>|) {
     match g.nodes_iter().nth(1) {
         Some(source) => dfs_from(g, visit, *source),
         None         => ()
@@ -48,19 +48,19 @@ pub fn dfs<V: Clone,
 
 pub fn dfs_from<V: Clone,
                 E: Clone + Ord>(g: &AdjListGraph<V, E>,
-                                          visit: |uint, Option<uint>|,
-                                          source: uint) {
+                                visit: |uint, Option<uint>|,
+                                source: uint) {
     let mut visited: HashSet<uint> = HashSet::new();
 
     visited.insert(source);
     dfs_helper(g, source, None, &mut visited, visit);
 
     fn dfs_helper<V: Clone,
-    E: Clone + Ord>(g: &AdjListGraph<V, E>,
-                    cur: uint,
-                    parent: Option<uint>,
-                    visited: &mut HashSet<uint>,
-                    visit: |uint, Option<uint>|) {
+                  E: Clone + Ord>(g: &AdjListGraph<V, E>,
+                                  cur: uint,
+                                  parent: Option<uint>,
+                                  visited: &mut HashSet<uint>,
+                                  visit: |uint, Option<uint>|) {
         visit(cur, parent);
         visited.insert(cur);
         for to in g.adj_iter(cur) {
@@ -74,8 +74,8 @@ pub fn dfs_from<V: Clone,
 
 pub fn bfs<V: Clone,
            E: Clone + Ord>(g: &AdjListGraph<V, E>,
-                                     visit: |uint, Option<uint>|,
-                                     source: uint) {
+                           visit: |uint, Option<uint>|,
+                           source: uint) {
     let mut visited: HashSet<uint> = HashSet::new();
     let mut queue: RingBuf<(uint, Option<uint>)> = RingBuf::new();
     visited.insert(source);
@@ -95,7 +95,7 @@ pub fn bfs<V: Clone,
 
 pub fn prim<V: Clone,
             E: Clone + Ord + Weight>(g: &AdjListGraph<V, E>)
-                                               -> AdjListGraph<V, E> {
+                                     -> AdjListGraph<V, E> {
     let mut mst = AdjListGraph::new();
     let mut pq: PriorityQueue<PQElt<E>> =
         PriorityQueue::new();
@@ -136,7 +136,7 @@ pub fn prim<V: Clone,
 
 pub fn kruskal<V: Clone,
                E: Clone + Ord + Weight>(g: &AdjListGraph<V, E>)
-                                                  -> AdjListGraph<V, E>{
+                                        -> AdjListGraph<V, E>{
     let mut ds = DisjointSet::new();
     for v in g.nodes_iter() {
         ds.add_set(*v);

@@ -136,7 +136,7 @@ impl<V: Clone, E: Clone + Ord> AdjListGraph<V, E> {
 
 pub fn output_graphviz<V: Clone,
                        E: Clone + Ord + Show>(g: &AdjListGraph<V, E>,
-                                                        filename: &str) {
+                                              filename: &str) {
     let path = Path::new(filename);
     let mut file = match File::create(&path) {
         Ok(f)  => f,
@@ -204,9 +204,9 @@ macro_rules! add_edge (
 #[cfg(test)]
 fn check<V: Clone + Ord + Show,
          E: Clone + Ord + Show>(g: &AdjListGraph<V, E>,
-                                          nodes: &HashMap<uint, Option<V>>,
-                                          edges: &HashMap<(uint, uint), Option<E>>,
-                                          adj_list: &HashMap<uint, Vec<uint>>) {
+                                nodes: &HashMap<uint, Option<V>>,
+                                edges: &HashMap<(uint, uint), Option<E>>,
+                                adj_list: &HashMap<uint, Vec<uint>>) {
     assert_eq!(nodes.len(), g.size());
 
     assert_eq!(nodes.len(), g.nodes_iter().count());
