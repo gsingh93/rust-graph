@@ -3,20 +3,16 @@ use std::collections::{Deque, HashSet, PriorityQueue, RingBuf};
 use graph::AdjListGraph;
 use std::cmp::{Ord, Ordering};
 use disjoint_set::DisjointSet;
-use std::default::Default;
 
-struct PQElt<E>(uint, Option<uint>, Option<E>);
+struct PQElt<E>(uint, Option<uint>, Option<Option<E>>);
 
 impl<E: Ord> Ord for PQElt<E> {
     fn cmp(&self, other: &PQElt<E>) -> Ordering {
         let &PQElt(_, _, ref edge) = other;
         let &PQElt(_, _, ref self_edge) = self;
-        let (e, self_e) = match (edge, self_edge) {
-            (&Some(ref e), &Some(ref self_e)) => (e, self_e),
-            _ => return Less // Return anything; Nones shouldn't be compared
-        };
+
         // Reverse the Ordering, because we're using a max heap, not a min heap
-        self_e.cmp(e).reverse()
+        self_edge.cmp(edge).reverse()
     }
 }
 
@@ -32,11 +28,7 @@ impl<E: PartialEq> PartialEq for PQElt<E> {
     fn eq(&self, other: &PQElt<E>) -> bool {
         let &PQElt(_, _, ref edge) = other;
         let &PQElt(_, _, ref self_edge) = self;
-        let (e, self_e) = match (edge, self_edge) {
-            (&Some(ref e), &Some(ref self_e)) => (e, self_e),
-            _ => return false // Return anything; Nones shouldn't be compared
-        };
-        self_e.eq(e)
+        self_edge.eq(edge)
     }
 }
 
@@ -45,8 +37,8 @@ pub trait Weight {
     fn set_weight(&mut self, int);
 }
 
-pub fn dfs<V: Clone + Default,
-           E: Clone + Default + Ord>(g: &AdjListGraph<V, E>,
+pub fn dfs<V: Clone,
+           E: Clone + Ord>(g: &AdjListGraph<V, E>,
                                      visit: |uint, Option<uint>|) {
     match g.nodes_iter().nth(1) {
         Some(source) => dfs_from(g, visit, *source),
@@ -54,8 +46,8 @@ pub fn dfs<V: Clone + Default,
     }
 }
 
-pub fn dfs_from<V: Clone + Default,
-                E: Clone + Default + Ord>(g: &AdjListGraph<V, E>,
+pub fn dfs_from<V: Clone,
+                E: Clone + Ord>(g: &AdjListGraph<V, E>,
                                           visit: |uint, Option<uint>|,
                                           source: uint) {
     let mut visited: HashSet<uint> = HashSet::new();
@@ -63,8 +55,8 @@ pub fn dfs_from<V: Clone + Default,
     visited.insert(source);
     dfs_helper(g, source, None, &mut visited, visit);
 
-    fn dfs_helper<V: Clone + Default,
-    E: Clone + Default + Ord>(g: &AdjListGraph<V, E>,
+    fn dfs_helper<V: Clone,
+    E: Clone + Ord>(g: &AdjListGraph<V, E>,
                     cur: uint,
                     parent: Option<uint>,
                     visited: &mut HashSet<uint>,
@@ -80,8 +72,8 @@ pub fn dfs_from<V: Clone + Default,
     }
 }
 
-pub fn bfs<V: Clone + Default,
-           E: Clone + Default + Ord>(g: &AdjListGraph<V, E>,
+pub fn bfs<V: Clone,
+           E: Clone + Ord>(g: &AdjListGraph<V, E>,
                                      visit: |uint, Option<uint>|,
                                      source: uint) {
     let mut visited: HashSet<uint> = HashSet::new();
@@ -101,8 +93,8 @@ pub fn bfs<V: Clone + Default,
     }
 }
 
-pub fn prim<V: Clone + Default,
-            E: Clone + Default + Ord + Weight>(g: &AdjListGraph<V, E>)
+pub fn prim<V: Clone,
+            E: Clone + Ord + Weight>(g: &AdjListGraph<V, E>)
                                                -> AdjListGraph<V, E> {
     let mut mst = AdjListGraph::new();
     let mut pq: PriorityQueue<PQElt<E>> =
@@ -142,8 +134,8 @@ pub fn prim<V: Clone + Default,
     mst
 }
 
-pub fn kruskal<V: Clone + Default,
-               E: Clone + Default + Ord + Weight>(g: &AdjListGraph<V, E>)
+pub fn kruskal<V: Clone,
+               E: Clone + Ord + Weight>(g: &AdjListGraph<V, E>)
                                                   -> AdjListGraph<V, E>{
     let mut ds = DisjointSet::new();
     for v in g.nodes_iter() {
@@ -177,8 +169,8 @@ pub fn warshall() {
 
 }
 
-pub fn connected_components<V: Clone + Default,
-                            E: Clone + Default + Ord>(g: &AdjListGraph<V, E>) {
+pub fn connected_components<V: Clone,
+                            E: Clone + Ord>(g: &AdjListGraph<V, E>) {
     let mut ds = DisjointSet::new();
     for v in g.nodes_iter() {
         ds.add_set(v.clone());
