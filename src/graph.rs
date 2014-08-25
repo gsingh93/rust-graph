@@ -276,5 +276,55 @@ fn graph_creation_test() {
 
 #[test]
 fn graph_copy_test() {
-    // Make sure graphs and all their properties can be copied correctly
+    let mut nodes = HashMap::new();
+    let mut edges = HashMap::new();
+    let mut adj_list = HashMap::new();
+    let mut g = AdjListGraph::new();
+    let mut copy: AdjListGraph<uint, uint> = AdjListGraph::new();
+
+    g.add_node_with_prop(0, 1u);
+    g.copy_node_to(&mut copy, 0);
+    nodes.insert(0u, 1u);
+    adj_list.insert(0, Vec::new());
+    check(&g, &nodes, &edges, &adj_list);
+    check(&copy, &nodes, &edges, &adj_list);
+
+    g.add_edge_with_prop(0, 1, 2u);
+    g.copy_edge_to(&mut copy, 0, 1);
+    nodes.insert(1, 0);
+    edges.insert((0, 1), 2u);
+    adj_list.insert(0, vec!(1));
+    adj_list.insert(1, Vec::new());
+    check(&g, &nodes, &edges, &adj_list);
+    check(&copy, &nodes, &edges, &adj_list);
+
+    g.add_node(2);
+    g.copy_node_to(&mut copy, 2);
+    nodes.insert(2, 0);
+    adj_list.insert(2, Vec::new());
+    check(&g, &nodes, &edges, &adj_list);
+    check(&copy, &nodes, &edges, &adj_list);
+
+    g.add_edge(2, 3);
+    g.copy_edge_to(&mut copy, 2, 3);
+    nodes.insert(3, 0);
+    edges.insert((2, 3), 0);
+    adj_list.insert(2, vec!(3));
+    adj_list.insert(3, Vec::new());
+    check(&g, &nodes, &edges, &adj_list);
+    check(&copy, &nodes, &edges, &adj_list);
+
+    // Overwrite property
+    copy.add_node_with_prop(0, 2);
+    copy.copy_node_to(&mut g, 0);
+    nodes.insert(0, 2);
+    check(&g, &nodes, &edges, &adj_list);
+    check(&copy, &nodes, &edges, &adj_list);
+
+    copy.add_edge_with_prop(0, 1, 3u);
+    copy.copy_edge_to(&mut g, 0, 1);
+    edges.insert((0, 1), 3);
+    adj_list.insert(0, vec!(1, 1));
+    check(&g, &nodes, &edges, &adj_list);
+    check(&copy, &nodes, &edges, &adj_list);
 }
