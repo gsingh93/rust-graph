@@ -108,6 +108,10 @@ impl<V: Clone, E: Clone + Ord> AdjListGraph<V, E> {
         self.nodes.len()
     }
 
+    pub fn num_edges(&self) -> uint {
+        self.edges.len()
+    }
+
     pub fn is_directed(&self) -> bool {
         self.is_directed
     }

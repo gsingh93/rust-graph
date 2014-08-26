@@ -95,7 +95,11 @@ pub fn bfs<V: Clone,
 
 pub fn prim<V: Clone,
             E: Clone + Ord + Weight>(g: &AdjListGraph<V, E>)
-                                     -> AdjListGraph<V, E> {
+                                     -> Result<AdjListGraph<V, E>, &'static str> {
+    if g.is_directed() {
+        return Err("Prim's algorithm only works with an undirected graph");
+    }
+
     let mut mst = AdjListGraph::new(false);
     let mut pq: PriorityQueue<PQElt<E>> =
         PriorityQueue::new();
@@ -104,13 +108,15 @@ pub fn prim<V: Clone,
     // TODO: Should the user be allowed to choose the source node
     let source = match g.nodes_iter().nth(1) {
         Some(source) => *source,
-        None         => return mst
+        None         => return Ok(mst)
     };
 
     pq.push(PQElt(source, None, None));
 
     while mst.size() != g.size() {
-        assert!(!pq.is_empty());
+        if pq.is_empty() {
+            return Err("Graph is not connected, no MST found");
+        }
 
         // Pick edge with minimal weight and add to graph
         let PQElt(u, parent, min_edge) = pq.pop().unwrap();
@@ -135,12 +141,16 @@ pub fn prim<V: Clone,
         }
     }
 
-    mst
+    Ok(mst)
 }
 
 pub fn kruskal<V: Clone,
                E: Clone + Ord + Weight>(g: &AdjListGraph<V, E>)
-                                        -> AdjListGraph<V, E> {
+                                        -> Result<AdjListGraph<V, E>, &'static str> {
+    if g.is_directed() {
+        return Err("Kruskal's algorithm only works with an undirected graph");
+    }
+
     let mut ds = DisjointSet::new();
     for v in g.nodes_iter() {
         ds.add_set(*v);
@@ -163,7 +173,12 @@ pub fn kruskal<V: Clone,
         }
     }
 
-    mst
+    assert!(mst.num_edges() < mst.size());
+    if mst.num_edges() != mst.size() - 1 {
+        return Err("Graph is not connected, no MST found");
+    }
+
+    Ok(mst)
 }
 
 pub fn djikstra() {
@@ -252,8 +267,8 @@ fn mst_test() {
     mst.add_edge_with_prop(8, 2, Edge::new(2));
     mst.add_edge_with_prop(1, 2, Edge::new(8));
 
-    let pmst = prim(&g);
-    let kmst = kruskal(&g);
+    let pmst = prim(&g).unwrap();
+    let kmst = kruskal(&g).unwrap();
     assert_eq!(mst, pmst);
     assert_eq!(mst, kmst);
 }

@@ -58,10 +58,17 @@ fn main() {
                    4 => 2 => Edge::new(5));
     g.add_edges_with_prop(e);
 
-    // Prim's Algorithm
-    let mst = prim(&g);
+    // Prim's
+    let mst = match prim(&g) {
+        Err(e) => fail!(e),
+        Ok(mst) => mst
+    };
     output_graphviz(&mst, "prim-mst.dot");
 
-    let mst = kruskal(&g);
+    // Kruskal's
+    let mst = match kruskal(&g) {
+        Err(e) => fail!(e),
+        Ok(mst) => mst
+    };
     output_graphviz(&mst, "kruskal-mst.dot");
 }
