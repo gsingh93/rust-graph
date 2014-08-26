@@ -91,15 +91,12 @@ impl<V: Clone, E: Clone + Ord> AdjListGraph<V, E> {
         }
     }
 
-    pub fn copy_node_to(&self, other: &mut AdjListGraph<V, E>, v: uint) {
-        other.add_node_internal(v, self.node_prop(v));
+    pub fn contains_node(&self, node: uint) -> bool {
+        self.nodes.contains_key(&node)
     }
 
-    pub fn copy_edge_to(&self, other: &mut AdjListGraph<V, E>, from: uint,
-                     to: uint) {
-        self.copy_node_to(other, from);
-        self.copy_node_to(other, to);
-        other.add_edge_internal(from, to, self.edge_prop(from, to));
+    pub fn copy_node_to(&self, other: &mut AdjListGraph<V, E>, v: uint) {
+        other.add_node_internal(v, self.node_prop(v));
     }
 
     pub fn add_edge(&mut self, from: uint, to: uint) {
@@ -138,6 +135,17 @@ impl<V: Clone, E: Clone + Ord> AdjListGraph<V, E> {
         for (from, to, e) in edges.move_iter() {
             self.add_edge_with_prop(from, to, e);
         }
+    }
+
+    pub fn contains_edge(&self, from: uint, to: uint) -> bool {
+        self.edges.contains_key(&(from, to))
+    }
+
+    pub fn copy_edge_to(&self, other: &mut AdjListGraph<V, E>, from: uint,
+                     to: uint) {
+        self.copy_node_to(other, from);
+        self.copy_node_to(other, to);
+        other.add_edge_internal(from, to, self.edge_prop(from, to));
     }
 
     pub fn node_prop(&self, node: uint) -> Option<V> {
