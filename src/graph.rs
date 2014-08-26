@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 use std::collections::hashmap::Keys;
-use std::fmt::Show;
+use std::fmt::{mod, Formatter, Show};
 use std::io::File;
 use std::slice::Items;
 
@@ -33,6 +33,23 @@ pub struct AdjListGraph<V = (), E = ()> {
     is_directed: bool
 }
 
+impl<V: PartialEq, E: PartialEq> PartialEq for AdjListGraph<V, E> {
+    fn eq(&self, other: &AdjListGraph<V, E>) -> bool {
+        self.adj_list == other.adj_list
+            && self.nodes == other.nodes
+            && self.edges == other.edges
+            && self.is_directed == other.is_directed
+    }
+}
+
+impl<V: Eq, E: Eq> Eq for AdjListGraph<V, E> {}
+
+impl<V: Clone, E: Clone + Ord + Show> Show for AdjListGraph<V, E> {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        write!(f, "{}", graphviz(self))
+    }
+}
+
 impl<V: Clone, E: Clone + Ord> AdjListGraph<V, E> {
     pub fn new(is_directed: bool) -> AdjListGraph<V, E> {
         AdjListGraph { adj_list: HashMap::new(), nodes: HashMap::new(),
@@ -60,7 +77,6 @@ impl<V: Clone, E: Clone + Ord> AdjListGraph<V, E> {
         if self.nodes.insert(n, v) {
             self.adj_list.insert(n, Vec::new());
         }
-
     }
 
     pub fn add_nodes(&mut self, vertices: Vec<uint>) {
@@ -102,6 +118,9 @@ impl<V: Clone, E: Clone + Ord> AdjListGraph<V, E> {
             self.add_node(to);
         }
 
+        assert!(self.nodes.contains_key(&from));
+        assert!(self.nodes.contains_key(&to));
+
         self.adj_list.get_mut(&from).push(to);
         if !self.is_directed {
             self.adj_list.get_mut(&to).push(from);
@@ -122,11 +141,21 @@ impl<V: Clone, E: Clone + Ord> AdjListGraph<V, E> {
     }
 
     pub fn node_prop(&self, node: uint) -> Option<V> {
-        self.nodes[node].clone()
+        if self.nodes.contains_key(&node) {
+            self.nodes[node].clone()
+        } else {
+            fail!("Node doesn't exist, can't get property");
+        }
     }
 
     pub fn edge_prop(&self, from: uint, to: uint) -> Option<E> {
-        self.edges[(from, to)].clone()
+        if self.edges.contains_key(&(from, to)) {
+            self.edges[(from, to)].clone()
+        } else if self.edges.contains_key(&(to, from)) {
+            self.edges[(to, from)].clone()
+        } else {
+            fail!("Edge doesn't exist, can't get property");
+        }
     }
 
     pub fn nodes_iter<'a>(&'a self) -> Keys<'a, uint, Option<V>> {
@@ -138,8 +167,32 @@ impl<V: Clone, E: Clone + Ord> AdjListGraph<V, E> {
     }
 
     pub fn adj_iter<'a>(&'a self, from: uint) -> Items<'a, uint> {
-        self.adj_list[from].iter()
+        if self.adj_list.contains_key(&from) {
+            self.adj_list[from].iter()
+        } else {
+            assert!(!self.nodes.contains_key(&from));
+            fail!("Node doesn't exist, can't get adjacency list")
+        }
     }
+}
+
+pub fn graphviz<V: Clone, E: Clone + Ord + Show>(g: &AdjListGraph<V, E>)
+                                                 -> String {
+    let mut s = if g.is_directed {
+        "digraph"
+    } else {
+        "graph"
+    }.to_string();
+
+    s.push_str(" G {\n");
+    for from in g.nodes_iter() {
+        for to in g.adj_iter(*from) {
+            s.push_str(format!("\t{} -> {};\n", from, to).as_slice());
+        }
+    }
+    s.push_str("}\n");
+
+    s
 }
 
 pub fn output_graphviz<V: Clone,
@@ -150,16 +203,7 @@ pub fn output_graphviz<V: Clone,
         Ok(f)  => f,
         Err(e) => fail!("Error opening file: {}", e)
     };
-    file.write_str("digraph G {\n").ok();
-
-    for from in g.nodes_iter() {
-        for to in g.adj_iter(*from) {
-            file.write_str(
-                format!("\t{} -> {};\n", from, to).as_slice()).ok();
-        }
-    }
-
-    file.write_str("}\n").ok();
+    file.write_str(graphviz(g).as_slice()).ok();
 }
 
 macro_rules! add_node (
