@@ -30,16 +30,21 @@ pub struct AdjListGraph<V = (), E = ()> {
     adj_list: HashMap<uint, Vec<uint>>,
     nodes: HashMap<uint, Option<V>>,
     edges: HashMap<(uint, uint), Option<E>>,
+    is_directed: bool
 }
 
 impl<V: Clone, E: Clone + Ord> AdjListGraph<V, E> {
-    pub fn new() -> AdjListGraph<V, E> {
+    pub fn new(is_directed: bool) -> AdjListGraph<V, E> {
         AdjListGraph { adj_list: HashMap::new(), nodes: HashMap::new(),
-                       edges: HashMap::new() }
+                       edges: HashMap::new(), is_directed: is_directed }
     }
 
     pub fn size(&self) -> uint {
         self.nodes.len()
+    }
+
+    pub fn is_directed(&self) -> bool {
+        self.is_directed
     }
 
     pub fn add_node(&mut self, n: uint) {
@@ -98,6 +103,9 @@ impl<V: Clone, E: Clone + Ord> AdjListGraph<V, E> {
         }
 
         self.adj_list.get_mut(&from).push(to);
+        if !self.is_directed {
+            self.adj_list.get_mut(&to).push(from);
+        }
         self.edges.insert((from, to), e);
     }
 
@@ -233,7 +241,7 @@ fn graph_creation_test() {
     let mut nodes = HashMap::new();
     let mut edges = HashMap::new();
     let mut adj_list: HashMap<uint, Vec<uint>> = HashMap::new();
-    let mut g = AdjListGraph::new();
+    let mut g = AdjListGraph::new(true);
 
     macro_rules! check_node(
         ($n:expr, $p:expr) => ({
@@ -286,8 +294,8 @@ fn graph_copy_test() {
     let mut nodes = HashMap::new();
     let mut edges = HashMap::new();
     let mut adj_list = HashMap::new();
-    let mut g = AdjListGraph::new();
-    let mut copy: AdjListGraph<uint, uint> = AdjListGraph::new();
+    let mut g = AdjListGraph::new(true);
+    let mut copy: AdjListGraph<uint, uint> = AdjListGraph::new(true);
 
     g.add_node_with_prop(0, 1u);
     g.copy_node_to(&mut copy, 0);
@@ -334,4 +342,20 @@ fn graph_copy_test() {
     adj_list.insert(0, vec!(1, 1));
     check(&g, &nodes, &edges, &adj_list);
     check(&copy, &nodes, &edges, &adj_list);
+}
+
+#[test]
+fn undirected_graph_test() {
+    let mut g: AdjListGraph<(), ()> = AdjListGraph::new(false);
+    let mut nodes = HashMap::new();
+    let mut edges = HashMap::new();
+    let mut adj_list = HashMap::new();
+
+    g.add_edge(0, 1);
+    nodes.insert(0, None);
+    nodes.insert(1, None);
+    edges.insert((0, 1), None);
+    adj_list.insert(0, vec!(1));
+    adj_list.insert(1, vec!(0));
+    check(&g, &nodes, &edges, &adj_list);
 }

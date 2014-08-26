@@ -52,7 +52,7 @@ impl Ord for Edge {
 
 fn main() {
     // Construct graph
-    let mut g: AdjListGraph<(), Edge> = AdjListGraph::new();
+    let mut g: AdjListGraph<(), Edge> = AdjListGraph::new(false);
     let e = edges!(0 => 3 => Edge::new(4), 3 => 2 => Edge::new(2),
                    3 => 1 => Edge::new(-1), 1 => 4 => Edge::new(1),
                    4 => 2 => Edge::new(5));

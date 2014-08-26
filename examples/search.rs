@@ -10,7 +10,7 @@ use graph::graph::output_graphviz;
 
 fn main() {
     // Construct graph
-    let mut g: AdjListGraph = AdjListGraph::new();
+    let mut g: AdjListGraph = AdjListGraph::new(true);
     let e = edges!(0 => 3, 3 => 2, 3 => 1, 1 => 4, 4 => 2);
     g.add_edges(e);
 

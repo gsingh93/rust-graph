@@ -96,7 +96,7 @@ pub fn bfs<V: Clone,
 pub fn prim<V: Clone,
             E: Clone + Ord + Weight>(g: &AdjListGraph<V, E>)
                                      -> AdjListGraph<V, E> {
-    let mut mst = AdjListGraph::new();
+    let mut mst = AdjListGraph::new(false);
     let mut pq: PriorityQueue<PQElt<E>> =
         PriorityQueue::new();
     let mut visited: HashSet<uint> = HashSet::new();
@@ -148,7 +148,7 @@ pub fn kruskal<V: Clone,
     }
     edge_weights.sort();
 
-    let mut mst: AdjListGraph<V, E> = AdjListGraph::new();
+    let mut mst: AdjListGraph<V, E> = AdjListGraph::new(false);
     while !edge_weights.is_empty() {
         let (u, v, _) = edge_weights.pop().unwrap();
         ds.find(&u);
