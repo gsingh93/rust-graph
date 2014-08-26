@@ -33,16 +33,64 @@ pub struct AdjListGraph<V = (), E = ()> {
     is_directed: bool
 }
 
-impl<V: PartialEq, E: PartialEq> PartialEq for AdjListGraph<V, E> {
+impl<V: Clone + PartialEq,
+     E: Clone + PartialEq + Ord> PartialEq for AdjListGraph<V, E> {
     fn eq(&self, other: &AdjListGraph<V, E>) -> bool {
-        self.adj_list == other.adj_list
-            && self.nodes == other.nodes
-            && self.edges == other.edges
-            && self.is_directed == other.is_directed
+                use std::hash::Hash;
+        if self.is_directed {
+            if self.edges != other.edges {
+                return false
+            }
+        } else {
+            if self.edges.len() != other.edges.len() {
+                return false
+            }
+            for &(u, v) in self.edges_iter() {
+                let mut prop: Option<E>;
+                if other.edges.contains_key(&(u, v)) {
+                    prop = other.edge_prop(u, v);
+                } else if other.edges.contains_key(&(v, u)) {
+                    prop = other.edge_prop(u, v);
+                } else {
+                    return false;
+                }
+                if self.edge_prop(u, v) != prop {
+                    return false
+                }
+            }
+        }
+        for u in self.nodes_iter() {
+            if !vec_eq(self.adj_list[*u].as_slice(),
+                       other.adj_list[*u].as_slice()) {
+                return false;
+            }
+        }
+
+        return self.nodes == other.nodes
+            && self.is_directed == other.is_directed;
+
+        fn vec_eq<T: Clone + Eq + Hash + PartialEq>(v1: &[T], v2: &[T]) -> bool {
+            use std::collections::HashSet;
+            let mut hm = HashSet::new();
+
+            if v1.len() != v2.len() {
+                return false
+            }
+            for e in v1.iter() {
+                hm.insert((*e).clone());
+            }
+            for e in v2.iter() {
+                if !hm.contains(e) {
+                    return false;
+                }
+            }
+
+            true
+        }
     }
 }
 
-impl<V: Eq, E: Eq> Eq for AdjListGraph<V, E> {}
+impl<V: Clone + Eq, E: Clone + Eq + Ord> Eq for AdjListGraph<V, E> {}
 
 impl<V: Clone, E: Clone + Ord + Show> Show for AdjListGraph<V, E> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
@@ -186,16 +234,22 @@ impl<V: Clone, E: Clone + Ord> AdjListGraph<V, E> {
 
 pub fn graphviz<V: Clone, E: Clone + Ord + Show>(g: &AdjListGraph<V, E>)
                                                  -> String {
-    let mut s = if g.is_directed {
-        "digraph"
+    let (s, arrow) = if g.is_directed {
+        ("digraph", "->")
     } else {
-        "graph"
-    }.to_string();
+        ("graph", "--")
+    };
+    let mut s = s.to_string();
 
     s.push_str(" G {\n");
     for from in g.nodes_iter() {
         for to in g.adj_iter(*from) {
-            s.push_str(format!("\t{} -> {};\n", from, to).as_slice());
+            let label = match g.edge_prop(*from, *to) {
+                None    => "".to_string(),
+                Some(l) => format!("{}", l)
+            };
+            s.push_str(format!("\t{} {} {} [label='{}'];\n", from, arrow, to,
+                               label).as_slice());
         }
     }
     s.push_str("}\n");
