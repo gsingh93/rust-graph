@@ -272,3 +272,18 @@ fn mst_test() {
     assert_eq!(mst, pmst);
     assert_eq!(mst, kmst);
 }
+
+#[test]
+fn mst_error_test() {
+    let directed_graph: AdjListGraph<(), Edge> = AdjListGraph::new(true);
+    prim(&directed_graph).err();
+    kruskal(&directed_graph).err();
+
+    let mut disconnected_graph = AdjListGraph::new(false);
+    disconnected_graph.add_edge_with_prop(0, 1, Edge::new(1));
+    disconnected_graph.add_edge_with_prop(0, 2, Edge::new(2));
+    disconnected_graph.add_edge_with_prop(1, 2, Edge::new(3));
+    disconnected_graph.add_node_with_prop(3, ());
+    prim(&disconnected_graph).err();
+    kruskal(&disconnected_graph).err();
+}
