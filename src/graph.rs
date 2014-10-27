@@ -132,13 +132,13 @@ impl<V: Clone, E: Clone + Ord> AdjListGraph<V, E> {
     }
 
     pub fn add_nodes(&mut self, vertices: Vec<uint>) {
-        for i in vertices.move_iter() {
+        for i in vertices.into_iter() {
             self.add_node(i);
         }
     }
 
     pub fn add_nodes_with_prop(&mut self, vertices: Vec<(uint, V)>) {
-        for (i, v) in vertices.move_iter() {
+        for (i, v) in vertices.into_iter() {
             self.add_node_with_prop(i, v);
         }
     }
@@ -178,13 +178,13 @@ impl<V: Clone, E: Clone + Ord> AdjListGraph<V, E> {
     }
 
     pub fn add_edges(&mut self, edges: Vec<(uint, uint)>) {
-        for (from, to) in edges.move_iter() {
+        for (from, to) in edges.into_iter() {
             self.add_edge(from, to);
         }
     }
 
     pub fn add_edges_with_prop(&mut self, edges: Vec<(uint, uint, E)>) {
-        for (from, to, e) in edges.move_iter() {
+        for (from, to, e) in edges.into_iter() {
             self.add_edge_with_prop(from, to, e);
         }
     }
