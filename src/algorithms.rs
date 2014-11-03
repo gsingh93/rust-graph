@@ -1,5 +1,5 @@
 //use graph::AdjListGraph;
-use std::collections::{Deque, HashSet, PriorityQueue, RingBuf};
+use std::collections::{HashSet, BinaryHeap, RingBuf};
 use graph::AdjListGraph;
 use std::cmp::{Ord, Ordering};
 use disjoint_set::DisjointSet;
@@ -37,36 +37,40 @@ pub trait Weight {
     fn set_weight(&mut self, int);
 }
 
-pub fn dfs<V: Clone,
+pub trait DFSVisitor {
+    #[allow(unused_variables)]
+    fn visit(&mut self, node: uint, parent: Option<uint>) {}
+}
+
+pub fn dfs<T: DFSVisitor, V: Clone,
            E: Clone + Ord>(g: &AdjListGraph<V, E>,
-                           visit: |uint, Option<uint>|) {
+                           visitor: &mut T) {
     match g.nodes_iter().nth(1) {
-        Some(source) => dfs_from(g, visit, *source),
+        Some(source) => dfs_from(g, visitor, *source),
         None         => ()
     }
 }
 
-pub fn dfs_from<V: Clone,
+pub fn dfs_from<T: DFSVisitor, V: Clone,
                 E: Clone + Ord>(g: &AdjListGraph<V, E>,
-                                visit: |uint, Option<uint>|,
+                                visitor: &mut T,
                                 source: uint) {
     let mut visited: HashSet<uint> = HashSet::new();
 
     visited.insert(source);
-    dfs_helper(g, source, None, &mut visited, visit);
+    dfs_helper(g, source, None, &mut visited, visitor);
 
-    fn dfs_helper<V: Clone,
+    fn dfs_helper<T: DFSVisitor, V: Clone,
                   E: Clone + Ord>(g: &AdjListGraph<V, E>,
                                   cur: uint,
                                   parent: Option<uint>,
                                   visited: &mut HashSet<uint>,
-                                  visit: |uint, Option<uint>|) {
-        visit(cur, parent);
+                                  visitor: &mut T) {
+        visitor.visit(cur, parent);
         visited.insert(cur);
         for to in g.adj_iter(cur) {
             if !visited.contains(to) {
-                dfs_helper(g, *to, Some(cur), visited,
-                           |to, parent| visit(to, parent));
+                dfs_helper(g, *to, Some(cur), visited, visitor);
             }
         }
     }
@@ -79,7 +83,7 @@ pub fn bfs<V: Clone,
     let mut visited: HashSet<uint> = HashSet::new();
     let mut queue: RingBuf<(uint, Option<uint>)> = RingBuf::new();
     visited.insert(source);
-    queue.push((source, None));
+    queue.push_back((source, None));
 
     while !queue.is_empty() {
         let (u, parent) = queue.pop_front().unwrap();
@@ -87,7 +91,7 @@ pub fn bfs<V: Clone,
         for v in g.adj_iter(u) {
             if !visited.contains(v) {
                 visited.insert(*v);
-                queue.push((*v, Some(u)));
+                queue.push_back((*v, Some(u)));
             }
         }
     }
@@ -101,8 +105,8 @@ pub fn prim<V: Clone,
     }
 
     let mut mst = AdjListGraph::new(false);
-    let mut pq: PriorityQueue<PQElt<E>> =
-        PriorityQueue::new();
+    let mut pq: BinaryHeap<PQElt<E>> =
+        BinaryHeap::new();
     let mut visited: HashSet<uint> = HashSet::new();
 
     // TODO: Should the user be allowed to choose the source node
@@ -129,7 +133,7 @@ pub fn prim<V: Clone,
             (Some(parent), Some(_)) => {
                 g.copy_edge_to(&mut mst, parent, u);
             },
-            (_, _) => fail!("Error")
+            (_, _) => panic!("Error")
         }
 
         // Push all adjacent edges on to priority queue

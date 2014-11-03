@@ -1,7 +1,7 @@
 #![macro_escape]
 
 use std::collections::HashMap;
-use std::collections::hashmap::Keys;
+use std::collections::hash_map::Keys;
 use std::fmt::{mod, Formatter, Show};
 use std::io::File;
 use std::slice::Items;
@@ -126,7 +126,7 @@ impl<V: Clone, E: Clone + Ord> AdjListGraph<V, E> {
 
     fn add_node_internal(&mut self, n: uint, v: Option<V>) {
         // Only construct a new adjacency list if the node did not already exist
-        if self.nodes.insert(n, v) {
+        if self.nodes.insert(n, v).is_none() {
             self.adj_list.insert(n, Vec::new());
         }
     }
@@ -170,9 +170,9 @@ impl<V: Clone, E: Clone + Ord> AdjListGraph<V, E> {
         assert!(self.nodes.contains_key(&from));
         assert!(self.nodes.contains_key(&to));
 
-        self.adj_list.get_mut(&from).push(to);
+        self.adj_list[from].push(to);
         if !self.is_directed {
-            self.adj_list.get_mut(&to).push(from);
+            self.adj_list[to].push(from);
         }
         self.edges.insert((from, to), e);
     }
@@ -204,7 +204,7 @@ impl<V: Clone, E: Clone + Ord> AdjListGraph<V, E> {
         if self.nodes.contains_key(&node) {
             self.nodes[node].clone()
         } else {
-            fail!("Node doesn't exist, can't get property");
+            panic!("Node doesn't exist, can't get property");
         }
     }
 
@@ -214,7 +214,7 @@ impl<V: Clone, E: Clone + Ord> AdjListGraph<V, E> {
         } else if self.edges.contains_key(&(to, from)) {
             self.edges[(to, from)].clone()
         } else {
-            fail!("Edge doesn't exist, can't get property");
+            panic!("Edge doesn't exist, can't get property");
         }
     }
 
@@ -231,7 +231,7 @@ impl<V: Clone, E: Clone + Ord> AdjListGraph<V, E> {
             self.adj_list[from].iter()
         } else {
             assert!(!self.nodes.contains_key(&from));
-            fail!("Node doesn't exist, can't get adjacency list")
+            panic!("Node doesn't exist, can't get adjacency list")
         }
     }
 }
@@ -267,7 +267,7 @@ pub fn output_graphviz<V: Clone,
     let path = Path::new(filename);
     let mut file = match File::create(&path) {
         Ok(f)  => f,
-        Err(e) => fail!("Error opening file: {}", e)
+        Err(e) => panic!("Error opening file: {}", e)
     };
     file.write_str(graphviz(g).as_slice()).ok();
 }
@@ -300,7 +300,7 @@ macro_rules! add_edge (
             $adj.insert($t, Vec::new());
             $nm.insert($t, None);
         }
-        $adj.get_mut(&$f).push($t);
+        $adj[$f].push($t);
         $em.insert(($f, $t), Some($p));
         $g.add_edge_with_prop($f, $t, $p);
     });
@@ -313,7 +313,7 @@ macro_rules! add_edge (
             $adj.insert($t, Vec::new());
             $nm.insert($t, None);
         }
-        $adj.get_mut(&$f).push($t);
+        $adj[$f].push($t);
         $em.insert(($f, $t), None);
         $g.add_edge($f, $t);
     })
@@ -388,14 +388,14 @@ fn graph_creation_test() {
     check_edge!(3, 0, 7);
 
     // Change edge data
-    *edges.get_mut(&(3, 0)) = Some(6);
+    edges[(3, 0)] = Some(6);
     check_edge!(3, 0, 6);
 
     // Duplicate node
     check_node!(0, 1);
 
     // Change node data
-    *nodes.get_mut(&0) = Some(2);
+    nodes[0] = Some(2);
     check_node!(0, 2);
 }
 

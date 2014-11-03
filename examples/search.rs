@@ -3,10 +3,24 @@
 #[phase(plugin, link)] extern crate graph;
 
 use std::collections::HashMap;
-use graph::algorithms::dfs;
-use graph::algorithms::bfs;
-use graph::graph::AdjListGraph;
-use graph::graph::output_graphviz;
+use graph::algorithms::{bfs, dfs, DFSVisitor};
+use graph::graph::{AdjListGraph, output_graphviz};
+
+struct Visitor {
+    dist: HashMap<uint, uint>
+}
+
+impl DFSVisitor for Visitor {
+    fn visit(&mut self, node: uint, parent: Option<uint>) {
+        match parent {
+            None => { self.dist.insert(node, 0); },
+            Some(p) => {
+                let new_dist = *self.dist.get(&p).unwrap() + 1;
+                self.dist.insert(node, new_dist);
+            }
+        }
+    }
+}
 
 fn main() {
     // Construct graph
@@ -14,19 +28,11 @@ fn main() {
     let e = edges!(0 => 3, 3 => 2, 3 => 1, 1 => 4, 4 => 2);
     g.add_edges(e);
 
-    // Calculate distances with DFS
-    let mut dist: HashMap<uint, uint> = HashMap::new();
-    dfs(&g, |node: uint, parent: Option<uint>| {
-        match parent {
-            None => { dist.insert(node, 0); },
-            Some(p) => {
-                let new_dist = dist.find(&p).unwrap() + 1;
-                dist.insert(node, new_dist);
-            }
-        }
-    });
+    // Calculate distances with DFSp
+    let mut v = Visitor { dist: HashMap::new() };
+    dfs(&g, &mut v);
     println!("DFS");
-    for (i, d) in dist.iter() {
+    for (i, d) in v.dist.iter() {
         println!("{}: {}", i, d);
     }
 
@@ -36,7 +42,7 @@ fn main() {
         match parent {
             None => { dist.insert(node, 0); },
             Some(p) => {
-                let new_dist = dist.find(&p).unwrap() + 1;
+                let new_dist = *dist.get(&p).unwrap() + 1;
                 dist.insert(node, new_dist);
             }
         }

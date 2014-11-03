@@ -60,14 +60,14 @@ fn main() {
 
     // Prim's
     let mst = match prim(&g) {
-        Err(e) => fail!(e),
+        Err(e) => panic!(e),
         Ok(mst) => mst
     };
     output_graphviz(&mst, "prim-mst.dot");
 
     // Kruskal's
     let mst = match kruskal(&g) {
-        Err(e) => fail!(e),
+        Err(e) => panic!(e),
         Ok(mst) => mst
     };
     output_graphviz(&mst, "kruskal-mst.dot");
