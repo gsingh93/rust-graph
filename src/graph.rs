@@ -342,7 +342,7 @@ fn check<V: Clone + Ord + Show,
 
     assert_eq!(g.nodes_iter().count(), adj_list.len());
     for u in g.nodes_iter() {
-        assert_eq!(adj_list[*u], g.adj_iter(*u).map(|x| *x).collect());
+        assert_eq!(adj_list[*u], g.adj_iter(*u).map(|x| *x).collect::<Vec<uint>>());
     }
 }
 
