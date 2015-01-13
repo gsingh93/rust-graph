@@ -1,6 +1,5 @@
-#![feature(macro_rules, default_type_params, phase)]
-
-#[phase(plugin, link)] extern crate graph;
+#[macro_use]
+extern crate graph;
 
 use graph::algorithms::connected_components;
 use graph::graph::AdjListGraph;

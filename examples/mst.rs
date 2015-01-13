@@ -1,32 +1,32 @@
-#![feature(macro_rules, default_type_params, phase)]
-
-#[phase(plugin, link)] extern crate graph;
+#[macro_use]
+extern crate graph;
 
 use graph::algorithms::kruskal;
 use graph::algorithms::prim;
 use graph::algorithms::Weight;
 use graph::graph::AdjListGraph;
 use graph::graph::output_graphviz;
-use std::cmp::{Ord, Ordering};
+use std::cmp::Ord;
+use std::cmp::Ordering::{self, Greater, Less, Equal};
 use std::default::Default;
 
-#[deriving(Clone, Eq, PartialEq, PartialOrd, Show)]
+#[derive(Clone, Eq, PartialEq, PartialOrd, Show)]
 struct Edge {
-    weight: int
+    weight: isize
 }
 
 impl Edge {
-    fn new(weight: int) -> Edge {
+    fn new(weight: isize) -> Edge {
         Edge { weight: weight }
     }
 }
 
 impl Weight for Edge {
-    fn weight(&self) -> int {
+    fn weight(&self) -> isize {
         self.weight
     }
 
-    fn set_weight(&mut self, weight: int) {
+    fn set_weight(&mut self, weight: isize) {
         self.weight = weight;
     }
 }

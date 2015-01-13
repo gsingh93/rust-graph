@@ -1,15 +1,15 @@
-#![macro_escape]
-
 use std::collections::HashMap;
 use std::collections::hash_map::Keys;
-use std::fmt::{mod, Formatter, Show};
+use std::fmt::{self, Formatter, Show};
 use std::io::File;
-use std::slice::Items;
+use std::slice::Iter;
+use std::hash::Hash;
+use std::collections::hash_map::Hasher;
 
 #[macro_export]
 macro_rules! edges (
     ($($u:expr => $v:expr),+) => ({
-        let mut edges: Vec<(uint, uint)> = Vec::new();
+        let mut edges: Vec<(usize, usize)> = Vec::new();
         $(
             edges.push(($u, $v));
         )+
@@ -17,26 +17,25 @@ macro_rules! edges (
     });
     ($($u:expr => $v:expr),+,) => (edges!($($u => $v),+));
     ($($u:expr => $v:expr => $e:expr),+) => ({
-        let mut edges: Vec<(uint, uint, Edge)> = Vec::new();
+        let mut edges: Vec<(usize, usize, Edge)> = Vec::new();
         $(
             edges.push(($u, $v, $e));
         )+
         edges
     });
     ($($u:expr => $v:expr => $e:expr),+,) => (edges!($($u => $v => $e),+));
-)
+);
 
 pub struct AdjListGraph<V = (), E = ()> {
-    adj_list: HashMap<uint, Vec<uint>>,
-    nodes: HashMap<uint, Option<V>>,
-    edges: HashMap<(uint, uint), Option<E>>,
+    adj_list: HashMap<usize, Vec<usize>>,
+    nodes: HashMap<usize, Option<V>>,
+    edges: HashMap<(usize, usize), Option<E>>,
     is_directed: bool
 }
 
 impl<V: Clone + PartialEq,
      E: Clone + PartialEq + Ord> PartialEq for AdjListGraph<V, E> {
     fn eq(&self, other: &AdjListGraph<V, E>) -> bool {
-                use std::hash::Hash;
         if self.is_directed {
             if self.edges != other.edges {
                 return false
@@ -60,8 +59,8 @@ impl<V: Clone + PartialEq,
             }
         }
         for u in self.nodes_iter() {
-            if !vec_eq(self.adj_list[*u].as_slice(),
-                       other.adj_list[*u].as_slice()) {
+            if !vec_eq(&*self.adj_list[*u],
+                       &*other.adj_list[*u]) {
                 return false;
             }
         }
@@ -69,7 +68,7 @@ impl<V: Clone + PartialEq,
         return self.nodes == other.nodes
             && self.is_directed == other.is_directed;
 
-        fn vec_eq<T: Clone + Eq + Hash + PartialEq>(v1: &[T], v2: &[T]) -> bool {
+        fn vec_eq<T: Clone + Eq + PartialEq + Hash<Hasher>>(v1: &[T], v2: &[T]) -> bool {
             use std::collections::HashSet;
             let mut hm = HashSet::new();
 
@@ -104,11 +103,11 @@ impl<V: Clone, E: Clone + Ord> AdjListGraph<V, E> {
                        edges: HashMap::new(), is_directed: is_directed }
     }
 
-    pub fn size(&self) -> uint {
+    pub fn size(&self) -> usize {
         self.nodes.len()
     }
 
-    pub fn num_edges(&self) -> uint {
+    pub fn num_edges(&self) -> usize {
         self.edges.len()
     }
 
@@ -116,50 +115,50 @@ impl<V: Clone, E: Clone + Ord> AdjListGraph<V, E> {
         self.is_directed
     }
 
-    pub fn add_node(&mut self, n: uint) {
+    pub fn add_node(&mut self, n: usize) {
         self.add_node_internal(n, None);
     }
 
-    pub fn add_node_with_prop(&mut self, n: uint, v: V) {
+    pub fn add_node_with_prop(&mut self, n: usize, v: V) {
         self.add_node_internal(n, Some(v))
     }
 
-    fn add_node_internal(&mut self, n: uint, v: Option<V>) {
+    fn add_node_internal(&mut self, n: usize, v: Option<V>) {
         // Only construct a new adjacency list if the node did not already exist
         if self.nodes.insert(n, v).is_none() {
             self.adj_list.insert(n, Vec::new());
         }
     }
 
-    pub fn add_nodes(&mut self, vertices: Vec<uint>) {
+    pub fn add_nodes(&mut self, vertices: Vec<usize>) {
         for i in vertices.into_iter() {
             self.add_node(i);
         }
     }
 
-    pub fn add_nodes_with_prop(&mut self, vertices: Vec<(uint, V)>) {
+    pub fn add_nodes_with_prop(&mut self, vertices: Vec<(usize, V)>) {
         for (i, v) in vertices.into_iter() {
             self.add_node_with_prop(i, v);
         }
     }
 
-    pub fn contains_node(&self, node: uint) -> bool {
+    pub fn contains_node(&self, node: usize) -> bool {
         self.nodes.contains_key(&node)
     }
 
-    pub fn copy_node_to(&self, other: &mut AdjListGraph<V, E>, v: uint) {
+    pub fn copy_node_to(&self, other: &mut AdjListGraph<V, E>, v: usize) {
         other.add_node_internal(v, self.node_prop(v));
     }
 
-    pub fn add_edge(&mut self, from: uint, to: uint) {
+    pub fn add_edge(&mut self, from: usize, to: usize) {
         self.add_edge_internal(from, to, None);
     }
 
-    pub fn add_edge_with_prop(&mut self, from: uint, to: uint, e: E) {
+    pub fn add_edge_with_prop(&mut self, from: usize, to: usize, e: E) {
         self.add_edge_internal(from, to, Some(e));
     }
 
-    fn add_edge_internal(&mut self, from: uint, to: uint, e: Option<E>) {
+    fn add_edge_internal(&mut self, from: usize, to: usize, e: Option<E>) {
         if !self.nodes.contains_key(&from) {
             self.add_node(from);
         }
@@ -177,30 +176,30 @@ impl<V: Clone, E: Clone + Ord> AdjListGraph<V, E> {
         self.edges.insert((from, to), e);
     }
 
-    pub fn add_edges(&mut self, edges: Vec<(uint, uint)>) {
+    pub fn add_edges(&mut self, edges: Vec<(usize, usize)>) {
         for (from, to) in edges.into_iter() {
             self.add_edge(from, to);
         }
     }
 
-    pub fn add_edges_with_prop(&mut self, edges: Vec<(uint, uint, E)>) {
+    pub fn add_edges_with_prop(&mut self, edges: Vec<(usize, usize, E)>) {
         for (from, to, e) in edges.into_iter() {
             self.add_edge_with_prop(from, to, e);
         }
     }
 
-    pub fn contains_edge(&self, from: uint, to: uint) -> bool {
+    pub fn contains_edge(&self, from: usize, to: usize) -> bool {
         self.edges.contains_key(&(from, to))
     }
 
-    pub fn copy_edge_to(&self, other: &mut AdjListGraph<V, E>, from: uint,
-                     to: uint) {
+    pub fn copy_edge_to(&self, other: &mut AdjListGraph<V, E>, from: usize,
+                     to: usize) {
         self.copy_node_to(other, from);
         self.copy_node_to(other, to);
         other.add_edge_internal(from, to, self.edge_prop(from, to));
     }
 
-    pub fn node_prop(&self, node: uint) -> Option<V> {
+    pub fn node_prop(&self, node: usize) -> Option<V> {
         if self.nodes.contains_key(&node) {
             self.nodes[node].clone()
         } else {
@@ -208,7 +207,7 @@ impl<V: Clone, E: Clone + Ord> AdjListGraph<V, E> {
         }
     }
 
-    pub fn edge_prop(&self, from: uint, to: uint) -> Option<E> {
+    pub fn edge_prop(&self, from: usize, to: usize) -> Option<E> {
         if self.edges.contains_key(&(from, to)) {
             self.edges[(from, to)].clone()
         } else if self.edges.contains_key(&(to, from)) {
@@ -218,15 +217,15 @@ impl<V: Clone, E: Clone + Ord> AdjListGraph<V, E> {
         }
     }
 
-    pub fn nodes_iter<'a>(&'a self) -> Keys<'a, uint, Option<V>> {
+    pub fn nodes_iter<'a>(&'a self) -> Keys<'a, usize, Option<V>> {
         self.nodes.keys()
     }
 
-    pub fn edges_iter<'a>(& 'a self) -> Keys<'a, (uint, uint), Option<E>> {
+    pub fn edges_iter<'a>(& 'a self) -> Keys<'a, (usize, usize), Option<E>> {
         self.edges.keys()
     }
 
-    pub fn adj_iter<'a>(&'a self, from: uint) -> Items<'a, uint> {
+    pub fn adj_iter<'a>(&'a self, from: usize) -> Iter<'a, usize> {
         if self.adj_list.contains_key(&from) {
             self.adj_list[from].iter()
         } else {
@@ -250,10 +249,10 @@ pub fn graphviz<V: Clone, E: Clone + Ord + Show>(g: &AdjListGraph<V, E>)
         for to in g.adj_iter(*from) {
             let label = match g.edge_prop(*from, *to) {
                 None    => "".to_string(),
-                Some(l) => format!("{}", l)
+                Some(l) => format!("{:?}", l)
             };
-            s.push_str(format!("\t{} {} {} [label='{}'];\n", from, arrow, to,
-                               label).as_slice());
+            s.push_str(&*format!("\t{} {} {} [label='{}'];\n", from, arrow, to,
+                                label));
         }
     }
     s.push_str("}\n");
@@ -269,7 +268,7 @@ pub fn output_graphviz<V: Clone,
         Ok(f)  => f,
         Err(e) => panic!("Error opening file: {}", e)
     };
-    file.write_str(graphviz(g).as_slice()).ok();
+    file.write_str(&*graphviz(g)).ok().expect("Writing graph to file failed");
 }
 
 macro_rules! add_node (
@@ -287,7 +286,7 @@ macro_rules! add_node (
         $m.insert($n, None);
         $g.add_node($n);
     })
-)
+);
 
 macro_rules! add_edge (
     ($em:ident, $nm: ident, $adj:ident, $g:ident, $f:expr, $t:expr,
@@ -317,14 +316,14 @@ macro_rules! add_edge (
         $em.insert(($f, $t), None);
         $g.add_edge($f, $t);
     })
-)
+);
 
 #[cfg(test)]
 fn check<V: Clone + Ord + Show,
          E: Clone + Ord + Show>(g: &AdjListGraph<V, E>,
-                                nodes: &HashMap<uint, Option<V>>,
-                                edges: &HashMap<(uint, uint), Option<E>>,
-                                adj_list: &HashMap<uint, Vec<uint>>) {
+                                nodes: &HashMap<usize, Option<V>>,
+                                edges: &HashMap<(usize, usize), Option<E>>,
+                                adj_list: &HashMap<usize, Vec<usize>>) {
     assert_eq!(nodes.len(), g.size());
 
     assert_eq!(nodes.len(), g.nodes_iter().count());
@@ -342,7 +341,7 @@ fn check<V: Clone + Ord + Show,
 
     assert_eq!(g.nodes_iter().count(), adj_list.len());
     for u in g.nodes_iter() {
-        assert_eq!(adj_list[*u], g.adj_iter(*u).map(|x| *x).collect::<Vec<uint>>());
+        assert_eq!(adj_list[*u], g.adj_iter(*u).map(|x| *x).collect::<Vec<usize>>());
     }
 }
 
@@ -350,7 +349,7 @@ fn check<V: Clone + Ord + Show,
 fn graph_creation_test() {
     let mut nodes = HashMap::new();
     let mut edges = HashMap::new();
-    let mut adj_list: HashMap<uint, Vec<uint>> = HashMap::new();
+    let mut adj_list: HashMap<usize, Vec<usize>> = HashMap::new();
     let mut g = AdjListGraph::new(true);
 
     macro_rules! check_node(
@@ -374,11 +373,11 @@ fn graph_creation_test() {
         })
     );
 
-    check_node!(0, 1u);
+    check_node!(0, 1us);
     check_node!(2, 2);
     check_node!(3);
 
-    check_edge!(0, 2, 6u);
+    check_edge!(0, 2, 6us);
     check_edge!(2, 0);
     check_edge!(3, 0, 7);
     check_edge!(0, 3);
@@ -405,19 +404,19 @@ fn graph_copy_test() {
     let mut edges = HashMap::new();
     let mut adj_list = HashMap::new();
     let mut g = AdjListGraph::new(true);
-    let mut copy: AdjListGraph<uint, uint> = AdjListGraph::new(true);
+    let mut copy: AdjListGraph<usize, usize> = AdjListGraph::new(true);
 
-    g.add_node_with_prop(0, 1u);
+    g.add_node_with_prop(0, 1us);
     g.copy_node_to(&mut copy, 0);
-    nodes.insert(0u, Some(1u));
+    nodes.insert(0us, Some(1us));
     adj_list.insert(0, Vec::new());
     check(&g, &nodes, &edges, &adj_list);
     check(&copy, &nodes, &edges, &adj_list);
 
-    g.add_edge_with_prop(0, 1, 2u);
+    g.add_edge_with_prop(0, 1, 2us);
     g.copy_edge_to(&mut copy, 0, 1);
     nodes.insert(1, None);
-    edges.insert((0, 1), Some(2u));
+    edges.insert((0, 1), Some(2us));
     adj_list.insert(0, vec!(1));
     adj_list.insert(1, Vec::new());
     check(&g, &nodes, &edges, &adj_list);
@@ -446,7 +445,7 @@ fn graph_copy_test() {
     check(&g, &nodes, &edges, &adj_list);
     check(&copy, &nodes, &edges, &adj_list);
 
-    copy.add_edge_with_prop(0, 1, 3u);
+    copy.add_edge_with_prop(0, 1, 3us);
     copy.copy_edge_to(&mut g, 0, 1);
     edges.insert((0, 1), Some(3));
     adj_list.insert(0, vec!(1, 1));

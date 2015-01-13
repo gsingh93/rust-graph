@@ -4,7 +4,7 @@ use graph::AdjListGraph;
 use std::cmp::{Ord, Ordering};
 use disjoint_set::DisjointSet;
 
-struct PQElt<E>(uint, Option<uint>, Option<Option<E>>);
+struct PQElt<E>(usize, Option<usize>, Option<Option<E>>);
 
 impl<E: Ord> Ord for PQElt<E> {
     fn cmp(&self, other: &PQElt<E>) -> Ordering {
@@ -33,13 +33,13 @@ impl<E: PartialEq> PartialEq for PQElt<E> {
 }
 
 pub trait Weight {
-    fn weight(&self) -> int;
-    fn set_weight(&mut self, int);
+    fn weight(&self) -> isize;
+    fn set_weight(&mut self, isize);
 }
 
 pub trait DFSVisitor {
     #[allow(unused_variables)]
-    fn visit(&mut self, node: uint, parent: Option<uint>) {}
+    fn visit(&mut self, node: usize, parent: Option<usize>) {}
 }
 
 pub fn dfs<T: DFSVisitor, V: Clone,
@@ -54,17 +54,17 @@ pub fn dfs<T: DFSVisitor, V: Clone,
 pub fn dfs_from<T: DFSVisitor, V: Clone,
                 E: Clone + Ord>(g: &AdjListGraph<V, E>,
                                 visitor: &mut T,
-                                source: uint) {
-    let mut visited: HashSet<uint> = HashSet::new();
+                                source: usize) {
+    let mut visited: HashSet<usize> = HashSet::new();
 
     visited.insert(source);
     dfs_helper(g, source, None, &mut visited, visitor);
 
     fn dfs_helper<T: DFSVisitor, V: Clone,
                   E: Clone + Ord>(g: &AdjListGraph<V, E>,
-                                  cur: uint,
-                                  parent: Option<uint>,
-                                  visited: &mut HashSet<uint>,
+                                  cur: usize,
+                                  parent: Option<usize>,
+                                  visited: &mut HashSet<usize>,
                                   visitor: &mut T) {
         visitor.visit(cur, parent);
         visited.insert(cur);
@@ -77,11 +77,12 @@ pub fn dfs_from<T: DFSVisitor, V: Clone,
 }
 
 pub fn bfs<V: Clone,
-           E: Clone + Ord>(g: &AdjListGraph<V, E>,
-                           visit: |uint, Option<uint>|,
-                           source: uint) {
-    let mut visited: HashSet<uint> = HashSet::new();
-    let mut queue: RingBuf<(uint, Option<uint>)> = RingBuf::new();
+           E: Clone + Ord,
+           F: FnMut(usize, Option<usize>)>(g: &AdjListGraph<V, E>,
+                                           mut visit: F,
+                                           source: usize) {
+    let mut visited: HashSet<usize> = HashSet::new();
+    let mut queue: RingBuf<(usize, Option<usize>)> = RingBuf::new();
     visited.insert(source);
     queue.push_back((source, None));
 
@@ -107,7 +108,7 @@ pub fn prim<V: Clone,
     let mut mst = AdjListGraph::new(false);
     let mut pq: BinaryHeap<PQElt<E>> =
         BinaryHeap::new();
-    let mut visited: HashSet<uint> = HashSet::new();
+    let mut visited: HashSet<usize> = HashSet::new();
 
     // TODO: Should the user be allowed to choose the source node
     let source = match g.nodes_iter().nth(1) {
@@ -208,7 +209,7 @@ pub fn connected_components<V: Clone,
         }
     }
 
-    println!("{}", ds);
+    println!("{:?}", ds);
 }
 
 pub fn ford_fulkerson() {
@@ -220,25 +221,25 @@ pub fn bellman_ford() {
 }
 
 #[cfg(test)]
-#[deriving(Clone, Eq, PartialEq, Ord, PartialOrd, Show)]
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Show)]
 struct Edge {
-    weight: int
+    weight: isize
 }
 
 #[cfg(test)]
 impl Edge {
-    fn new(weight: int) -> Edge {
+    fn new(weight: isize) -> Edge {
         Edge { weight: weight }
     }
 }
 
 #[cfg(test)]
 impl Weight for Edge {
-    fn weight(&self) -> int {
+    fn weight(&self) -> isize {
         self.weight
     }
 
-    fn set_weight(&mut self, weight: int) {
+    fn set_weight(&mut self, weight: isize) {
         self.weight = weight;
     }
 }

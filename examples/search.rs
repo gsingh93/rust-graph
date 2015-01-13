@@ -1,17 +1,16 @@
-#![feature(macro_rules, default_type_params, phase)]
-
-#[phase(plugin, link)] extern crate graph;
+#[macro_use]
+extern crate graph;
 
 use std::collections::HashMap;
 use graph::algorithms::{bfs, dfs, DFSVisitor};
 use graph::graph::{AdjListGraph, output_graphviz};
 
 struct Visitor {
-    dist: HashMap<uint, uint>
+    dist: HashMap<usize, usize>
 }
 
 impl DFSVisitor for Visitor {
-    fn visit(&mut self, node: uint, parent: Option<uint>) {
+    fn visit(&mut self, node: usize, parent: Option<usize>) {
         match parent {
             None => { self.dist.insert(node, 0); },
             Some(p) => {
@@ -37,8 +36,8 @@ fn main() {
     }
 
     // Calculate distances with BFS
-    let mut dist: HashMap<uint, uint> = HashMap::new();
-    bfs(&g, |node: uint, parent: Option<uint>| {
+    let mut dist: HashMap<usize, usize> = HashMap::new();
+    bfs(&g, |&mut: node: usize, parent: Option<usize>| {
         match parent {
             None => { dist.insert(node, 0); },
             Some(p) => {

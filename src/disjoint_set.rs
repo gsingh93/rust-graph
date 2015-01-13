@@ -1,6 +1,7 @@
 use std::collections::HashMap;
-use collections::hash::Hash;
-use std::fmt::{mod, Show, Formatter};
+use std::hash::Hash;
+use std::fmt::{self, Show, Formatter};
+use std::collections::hash_map::Hasher;
 
 // TODO: Store references
 pub struct DisjointSet<T> {
@@ -8,7 +9,7 @@ pub struct DisjointSet<T> {
     repr: HashMap<T, T>
 }
 
-impl<T: Clone + Eq + Hash> DisjointSet<T> {
+impl<T: Clone + Eq + Hash<Hasher>> DisjointSet<T> {
     pub fn new() -> DisjointSet<T> {
         DisjointSet { sets: HashMap::new(), repr: HashMap::new() }
     }
@@ -35,13 +36,13 @@ impl<T: Clone + Eq + Hash> DisjointSet<T> {
     }
 }
 
-impl<T: Eq + Hash + Show> Show for DisjointSet<T> {
+impl<T: Eq + Hash<Hasher> + Show> Show for DisjointSet<T> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         for (k, v) in self.sets.iter() {
-            try!(write!(f, "{}: ", k))
-                for i in v.iter() {
-                    try!(write!(f, "{}", i));
-                }
+            try!(write!(f, "{:?}: ", k));
+            for i in v.iter() {
+                try!(write!(f, "{:?}", i));
+            }
             try!(write!(f, "\n"))
         }
         Ok(())
