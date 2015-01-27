@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::hash::Hash;
-use std::fmt::{self, Show, Formatter};
+use std::fmt::{self, Debug, Formatter};
 use std::collections::hash_map::Hasher;
 
 // TODO: Store references
@@ -32,11 +32,11 @@ impl<T: Clone + Eq + Hash<Hasher>> DisjointSet<T> {
             self.repr.insert(i.clone(), repr_x.clone());
         }
         let x_set = self.sets.get_mut(&repr_x).unwrap();
-        x_set.push_all(y_set.as_slice());
+        x_set.push_all(&*y_set);
     }
 }
 
-impl<T: Eq + Hash<Hasher> + Show> Show for DisjointSet<T> {
+impl<T: Eq + Hash<Hasher> + Debug> Debug for DisjointSet<T> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         for (k, v) in self.sets.iter() {
             try!(write!(f, "{:?}: ", k));

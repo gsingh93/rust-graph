@@ -10,7 +10,7 @@ use std::cmp::Ord;
 use std::cmp::Ordering::{self, Greater, Less, Equal};
 use std::default::Default;
 
-#[derive(Clone, Eq, PartialEq, PartialOrd, Show)]
+#[derive(Clone, Eq, PartialEq, PartialOrd, Debug)]
 struct Edge {
     weight: isize
 }

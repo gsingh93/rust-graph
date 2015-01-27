@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::collections::hash_map::Keys;
-use std::fmt::{self, Formatter, Show};
+use std::fmt::{self, Formatter, Debug};
 use std::io::File;
 use std::slice::Iter;
 use std::hash::Hash;
@@ -91,7 +91,7 @@ impl<V: Clone + PartialEq,
 
 impl<V: Clone + Eq, E: Clone + Eq + Ord> Eq for AdjListGraph<V, E> {}
 
-impl<V: Clone, E: Clone + Ord + Show> Show for AdjListGraph<V, E> {
+impl<V: Clone, E: Clone + Ord + Debug> Debug for AdjListGraph<V, E> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         write!(f, "{}", graphviz(self))
     }
@@ -235,8 +235,8 @@ impl<V: Clone, E: Clone + Ord> AdjListGraph<V, E> {
     }
 }
 
-pub fn graphviz<V: Clone, E: Clone + Ord + Show>(g: &AdjListGraph<V, E>)
-                                                 -> String {
+pub fn graphviz<V: Clone, E: Clone + Ord + Debug>(g: &AdjListGraph<V, E>)
+                                                  -> String {
     let (s, arrow) = if g.is_directed {
         ("digraph", "->")
     } else {
@@ -261,8 +261,8 @@ pub fn graphviz<V: Clone, E: Clone + Ord + Show>(g: &AdjListGraph<V, E>)
 }
 
 pub fn output_graphviz<V: Clone,
-                       E: Clone + Ord + Show>(g: &AdjListGraph<V, E>,
-                                              filename: &str) {
+                       E: Clone + Ord + Debug>(g: &AdjListGraph<V, E>,
+                                               filename: &str) {
     let path = Path::new(filename);
     let mut file = match File::create(&path) {
         Ok(f)  => f,
@@ -319,11 +319,11 @@ macro_rules! add_edge (
 );
 
 #[cfg(test)]
-fn check<V: Clone + Ord + Show,
-         E: Clone + Ord + Show>(g: &AdjListGraph<V, E>,
-                                nodes: &HashMap<usize, Option<V>>,
-                                edges: &HashMap<(usize, usize), Option<E>>,
-                                adj_list: &HashMap<usize, Vec<usize>>) {
+fn check<V: Clone + Ord + Debug,
+         E: Clone + Ord + Debug>(g: &AdjListGraph<V, E>,
+                                 nodes: &HashMap<usize, Option<V>>,
+                                 edges: &HashMap<(usize, usize), Option<E>>,
+                                 adj_list: &HashMap<usize, Vec<usize>>) {
     assert_eq!(nodes.len(), g.size());
 
     assert_eq!(nodes.len(), g.nodes_iter().count());

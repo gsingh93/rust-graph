@@ -221,7 +221,7 @@ pub fn bellman_ford() {
 }
 
 #[cfg(test)]
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Show)]
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Debug)]
 struct Edge {
     weight: isize
 }
