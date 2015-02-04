@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::collections::hash_map::Keys;
 use std::fmt::{self, Formatter, Debug};
-use std::io::File;
+use std::old_io::File;
 use std::slice::Iter;
 use std::hash::Hash;
 use std::collections::hash_map::Hasher;
