@@ -37,7 +37,7 @@ fn main() {
 
     // Calculate distances with BFS
     let mut dist: HashMap<usize, usize> = HashMap::new();
-    bfs(&g, |&mut: node: usize, parent: Option<usize>| {
+    bfs(&g, |node: usize, parent: Option<usize>| {
         match parent {
             None => { dist.insert(node, 0); },
             Some(p) => {

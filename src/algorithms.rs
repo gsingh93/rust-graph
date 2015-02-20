@@ -1,5 +1,5 @@
 //use graph::AdjListGraph;
-use std::collections::{HashSet, BinaryHeap, RingBuf};
+use std::collections::{HashSet, BinaryHeap, VecDeque};
 use graph::AdjListGraph;
 use std::cmp::{Ord, Ordering};
 use disjoint_set::DisjointSet;
@@ -82,7 +82,7 @@ pub fn bfs<V: Clone,
                                            mut visit: F,
                                            source: usize) {
     let mut visited: HashSet<usize> = HashSet::new();
-    let mut queue: RingBuf<(usize, Option<usize>)> = RingBuf::new();
+    let mut queue: VecDeque<(usize, Option<usize>)> = VecDeque::new();
     visited.insert(source);
     queue.push_back((source, None));
 

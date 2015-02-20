@@ -1,4 +1,4 @@
-#![feature(core, path, io, collections)]
+#![feature(io, fs, collections)]
 
 mod disjoint_set;
 pub mod algorithms;

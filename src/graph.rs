@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 use std::collections::hash_map::Keys;
 use std::fmt::{self, Formatter, Debug};
-use std::old_io::File;
+use std::io::Write;
+use std::fs::File;
 use std::slice::Iter;
 use std::hash::Hash;
-use std::collections::hash_map::Hasher;
 
 #[macro_export]
 macro_rules! edges (
@@ -68,7 +68,7 @@ impl<V: Clone + PartialEq,
         return self.nodes == other.nodes
             && self.is_directed == other.is_directed;
 
-        fn vec_eq<T: Clone + Eq + PartialEq + Hash<Hasher>>(v1: &[T], v2: &[T]) -> bool {
+        fn vec_eq<T: Clone + Eq + PartialEq + Hash>(v1: &[T], v2: &[T]) -> bool {
             use std::collections::HashSet;
             let mut hm = HashSet::new();
 
@@ -263,12 +263,11 @@ pub fn graphviz<V: Clone, E: Clone + Ord + Debug>(g: &AdjListGraph<V, E>)
 pub fn output_graphviz<V: Clone,
                        E: Clone + Ord + Debug>(g: &AdjListGraph<V, E>,
                                                filename: &str) {
-    let path = Path::new(filename);
-    let mut file = match File::create(&path) {
+    let mut file = match File::create(filename) {
         Ok(f)  => f,
         Err(e) => panic!("Error opening file: {}", e)
     };
-    file.write_str(&*graphviz(g)).ok().expect("Writing graph to file failed");
+    file.write_all(graphviz(g).as_bytes()).ok().expect("Writing graph to file failed");
 }
 
 macro_rules! add_node (
@@ -373,11 +372,11 @@ fn graph_creation_test() {
         })
     );
 
-    check_node!(0, 1us);
+    check_node!(0, 1usize);
     check_node!(2, 2);
     check_node!(3);
 
-    check_edge!(0, 2, 6us);
+    check_edge!(0, 2, 6usize);
     check_edge!(2, 0);
     check_edge!(3, 0, 7);
     check_edge!(0, 3);
@@ -406,17 +405,17 @@ fn graph_copy_test() {
     let mut g = AdjListGraph::new(true);
     let mut copy: AdjListGraph<usize, usize> = AdjListGraph::new(true);
 
-    g.add_node_with_prop(0, 1us);
+    g.add_node_with_prop(0, 1usize);
     g.copy_node_to(&mut copy, 0);
-    nodes.insert(0us, Some(1us));
+    nodes.insert(0usize, Some(1usize));
     adj_list.insert(0, Vec::new());
     check(&g, &nodes, &edges, &adj_list);
     check(&copy, &nodes, &edges, &adj_list);
 
-    g.add_edge_with_prop(0, 1, 2us);
+    g.add_edge_with_prop(0, 1, 2usize);
     g.copy_edge_to(&mut copy, 0, 1);
     nodes.insert(1, None);
-    edges.insert((0, 1), Some(2us));
+    edges.insert((0, 1), Some(2usize));
     adj_list.insert(0, vec!(1));
     adj_list.insert(1, Vec::new());
     check(&g, &nodes, &edges, &adj_list);
@@ -445,7 +444,7 @@ fn graph_copy_test() {
     check(&g, &nodes, &edges, &adj_list);
     check(&copy, &nodes, &edges, &adj_list);
 
-    copy.add_edge_with_prop(0, 1, 3us);
+    copy.add_edge_with_prop(0, 1, 3usize);
     copy.copy_edge_to(&mut g, 0, 1);
     edges.insert((0, 1), Some(3));
     adj_list.insert(0, vec!(1, 1));
