@@ -1,5 +1,5 @@
 #[macro_use]
-extern crate graph;
+extern crate "rust_graph" as graph;
 
 use graph::algorithms::kruskal;
 use graph::algorithms::prim;

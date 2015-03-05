@@ -1,5 +1,14 @@
 [package]
 
-name = "graph"
+name = "rust_graph"
 version = "0.0.1"
 authors = ["Gulshan Singh <gulshan@umich.edu>"]
+
+description = "A graph library for Rust"
+
+repository = "https://github.com/gsingh93/rust-graph"
+readme = "README.md"
+
+keywords = ["graph", "algorithm", "mst", "dfs"]
+
+license = "MIT"
