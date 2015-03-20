@@ -1,5 +1,5 @@
 #[macro_use]
-extern crate "rust_graph" as graph;
+extern crate "rust-graph" as graph;
 
 use graph::algorithms::connected_components;
 use graph::graph::AdjListGraph;
