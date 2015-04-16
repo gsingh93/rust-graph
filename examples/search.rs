@@ -1,5 +1,5 @@
 #[macro_use]
-extern crate "rust-graph" as graph;
+extern crate rust_graph as graph;
 
 use std::collections::HashMap;
 use graph::algorithms::{bfs, dfs, DFSVisitor};

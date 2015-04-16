@@ -59,8 +59,7 @@ impl<V: Clone + PartialEq,
             }
         }
         for u in self.nodes_iter() {
-            if !vec_eq(&*self.adj_list[*u],
-                       &*other.adj_list[*u]) {
+            if !vec_eq(&*self.adj_list[u], &*other.adj_list[u]) {
                 return false;
             }
         }
@@ -169,9 +168,9 @@ impl<V: Clone, E: Clone + Ord> AdjListGraph<V, E> {
         assert!(self.nodes.contains_key(&from));
         assert!(self.nodes.contains_key(&to));
 
-        self.adj_list[from].push(to);
+        self.adj_list.get_mut(&from).unwrap().push(to);
         if !self.is_directed {
-            self.adj_list[to].push(from);
+            self.adj_list.get_mut(&to).unwrap().push(from);
         }
         self.edges.insert((from, to), e);
     }
@@ -201,7 +200,7 @@ impl<V: Clone, E: Clone + Ord> AdjListGraph<V, E> {
 
     pub fn node_prop(&self, node: usize) -> Option<V> {
         if self.nodes.contains_key(&node) {
-            self.nodes[node].clone()
+            self.nodes[&node].clone()
         } else {
             panic!("Node doesn't exist, can't get property");
         }
@@ -209,9 +208,9 @@ impl<V: Clone, E: Clone + Ord> AdjListGraph<V, E> {
 
     pub fn edge_prop(&self, from: usize, to: usize) -> Option<E> {
         if self.edges.contains_key(&(from, to)) {
-            self.edges[(from, to)].clone()
+            self.edges[&(from, to)].clone()
         } else if self.edges.contains_key(&(to, from)) {
-            self.edges[(to, from)].clone()
+            self.edges[&(to, from)].clone()
         } else {
             panic!("Edge doesn't exist, can't get property");
         }
@@ -227,7 +226,7 @@ impl<V: Clone, E: Clone + Ord> AdjListGraph<V, E> {
 
     pub fn adj_iter<'a>(&'a self, from: usize) -> Iter<'a, usize> {
         if self.adj_list.contains_key(&from) {
-            self.adj_list[from].iter()
+            self.adj_list[&from].iter()
         } else {
             assert!(!self.nodes.contains_key(&from));
             panic!("Node doesn't exist, can't get adjacency list")
@@ -298,7 +297,7 @@ macro_rules! add_edge (
             $adj.insert($t, Vec::new());
             $nm.insert($t, None);
         }
-        $adj[$f].push($t);
+        $adj.get_mut(&$f).unwrap().push($t);
         $em.insert(($f, $t), Some($p));
         $g.add_edge_with_prop($f, $t, $p);
     });
@@ -311,7 +310,7 @@ macro_rules! add_edge (
             $adj.insert($t, Vec::new());
             $nm.insert($t, None);
         }
-        $adj[$f].push($t);
+        $adj.get_mut(&$f).unwrap().push($t);
         $em.insert(($f, $t), None);
         $g.add_edge($f, $t);
     })
@@ -328,19 +327,19 @@ fn check<V: Clone + Ord + Debug,
     assert_eq!(nodes.len(), g.nodes_iter().count());
     for n in g.nodes_iter() {
         assert!(nodes.contains_key(n));
-        assert_eq!(nodes[*n], g.node_prop(*n));
+        assert_eq!(nodes[n], g.node_prop(*n));
     }
 
     assert_eq!(edges.len(), g.edges_iter().count());
     for e in g.edges_iter() {
         let (u, v) = *e;
         assert!(edges.contains_key(e));
-        assert_eq!(edges[*e], g.edge_prop(u, v));
+        assert_eq!(edges[e], g.edge_prop(u, v));
     }
 
     assert_eq!(g.nodes_iter().count(), adj_list.len());
     for u in g.nodes_iter() {
-        assert_eq!(adj_list[*u], g.adj_iter(*u).map(|x| *x).collect::<Vec<usize>>());
+        assert_eq!(adj_list[u], g.adj_iter(*u).map(|x| *x).collect::<Vec<usize>>());
     }
 }
 
@@ -386,14 +385,14 @@ fn graph_creation_test() {
     check_edge!(3, 0, 7);
 
     // Change edge data
-    edges[(3, 0)] = Some(6);
+    *edges.get_mut(&(3, 0)).unwrap() = Some(6);
     check_edge!(3, 0, 6);
 
     // Duplicate node
     check_node!(0, 1);
 
     // Change node data
-    nodes[0] = Some(2);
+    *nodes.get_mut(&0).unwrap() = Some(2);
     check_node!(0, 2);
 }
 

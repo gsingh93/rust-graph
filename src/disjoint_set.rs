@@ -19,12 +19,12 @@ impl<T: Clone + Eq + Hash> DisjointSet<T> {
     }
 
     pub fn find(&self, x: &T) -> T {
-        self.repr[*x].clone()
+        self.repr[x].clone()
     }
 
     pub fn union(&mut self, x: &T, y: &T) {
-        let repr_x = self.repr[*x].clone();
-        let repr_y = self.repr[*y].clone();
+        let repr_x = self.repr[x].clone();
+        let repr_y = self.repr[y].clone();
         let y_set = self.sets.remove(&repr_y).unwrap();
         for i in y_set.iter() {
             self.repr.remove(i);
